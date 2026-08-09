@@ -61,7 +61,7 @@
 **Goal:** Define the Mongoose schema for a bookmark, including ownership and indexes for query performance.
 **Target Files:** `backend/models/Bookmark.js`
 **Branch:** `feature/05-bookmark-model`
-**Done When:** Schema requires `user` (ref to User, required, indexed), validates `url` or `note` is present, `tags` as array of strings, `summary`, `collection`/folder field, `createdAt`. A compound index on `{ user, tags }` is added to support the aggregation queries in Task 09.
+**Done When:** Schema requires `user` (ref to User, required, indexed), validates `url` or `note` is present, `tags` as array of strings, `summary`, `collection`/folder field, `createdAt`. A compound index on `{ user, tags }` is added to support the aggregation queries in Task 09: Tag & Folder Aggregation Queries (Scoped).
 
 ---
 
