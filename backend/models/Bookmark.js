@@ -40,7 +40,7 @@ bookmarkSchema.pre('validate', function (next) {
   if (!this.url && !this.note) {
     this.invalidate('url', 'Either a URL or a note is required.');
   }
-  next();
+  
 });
 
 // Compound index to support Task 09's tag/folder aggregation queries

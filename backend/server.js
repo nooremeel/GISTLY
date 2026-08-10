@@ -33,6 +33,7 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/bookmarks', require('./routes/bookmarks'));
 
 const PORT = process.env.PORT || 5000;
 
