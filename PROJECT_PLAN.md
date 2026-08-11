@@ -54,7 +54,7 @@
 - `POST /api/auth/login` verifies credentials and returns a JWT in an httpOnly, SameSite=Lax cookie with a set expiry (e.g. 7 days).
 - `POST /api/auth/logout` clears the cookie.
 - `GET /api/auth/me` (protected) returns the current user only with a valid token, 401 otherwise.
-
+    
 ---
 
 ## Task 05 — Bookmark Data Model
