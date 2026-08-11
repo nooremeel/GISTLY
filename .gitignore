@@ -19,3 +19,7 @@ npm-debug.log*
 # OS/editor
 .DS_Store
 .vscode/
+
+backend/bookmark.json
+backend/login.json
+backend/cookies.txt
