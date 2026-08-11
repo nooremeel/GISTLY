@@ -1,25 +1,32 @@
 const Bookmark = require('../models/Bookmark');
+const { generateSummaryAndTags } = require('../services/aiService');
 
 // @desc    Create a bookmark
 // @route   POST /api/bookmarks
 const createBookmark = async (req, res) => {
   try {
-    const { url, note, tags, collection } = req.body;
-
+    const { url, note, tags: userTags = [], collection } = req.body;
+    const { summary, tags: aiTags } = await generateSummaryAndTags({ url, note });
+    const mergedTags = [...userTags, ...aiTags]
+      .map((t) => t.trim())
+      .filter(Boolean)
+      .filter((t, i, arr) => arr.findIndex((x) => x.toLowerCase() === t.toLowerCase()) === i);
     const bookmark = await Bookmark.create({
       user: req.user.id,
       url,
       note,
-      tags,
       collection,
+      summary,
+      tags: mergedTags,
     });
 
     res.status(201).json(bookmark);
   } catch (err) {
-    
+
     if (err.name === 'ValidationError') {
       return res.status(400).json({ message: err.message });
     }
+    console.error('createBookmark error:', err);
     res.status(500).json({ message: 'Server error creating bookmark' });
   }
 };
