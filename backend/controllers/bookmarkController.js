@@ -1,3 +1,5 @@
+const mongoose = require('mongoose');
+
 const Bookmark = require('../models/Bookmark');
 const { generateSummaryAndTags } = require('../services/aiService');
 
@@ -138,10 +140,55 @@ const deleteBookmark = async (req, res) => {
   }
 };
 
+// GET /api/bookmarks/grouped — bookmarks grouped by collection/folder
+const getGrouped = async (req, res) => {
+  try {
+    const userId = new mongoose.Types.ObjectId(req.user.id);
+
+    const grouped = await Bookmark.aggregate([
+      { $match: { user: userId } },
+      {
+        $group: {
+          _id: '$collection',
+          count: { $sum: 1 },
+          bookmarks: { $push: '$$ROOT' },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    res.status(200).json({ data: grouped });
+  } catch (err) {
+    console.error('getGrouped error:', err);
+    res.status(500).json({ message: 'Server error while grouping bookmarks' });
+  }
+};
+
+// GET /api/bookmarks/tags/:tag — bookmarks matching a single tag (scoped to user)
+const getByTag = async (req, res) => {
+  try {
+    const userId = new mongoose.Types.ObjectId(req.user.id);
+    const { tag } = req.params;
+
+    const results = await Bookmark.aggregate([
+      { $match: { user: userId } },
+      { $unwind: '$tags' },
+      { $match: { tags: tag } },
+    ]);
+
+    res.status(200).json({ data: results });
+  } catch (err) {
+    console.error('getByTag error:', err);
+    res.status(500).json({ message: 'Server error while fetching bookmarks by tag' });
+  }
+};
+
 module.exports = {
   createBookmark,
   getBookmarks,
   getBookmark,
   updateBookmark,
   deleteBookmark,
+  getGrouped,
+  getByTag,
 };
