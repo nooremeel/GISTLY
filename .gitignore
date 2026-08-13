@@ -1,25 +1,39 @@
 # Dependencies
 node_modules/
-backend/node_modules/
-frontend/node_modules/
 
 # Environment variables
 .env
-backend/.env
-frontend/.env
-
-# Build output
-frontend/build/
-frontend/dist/
+.env.local
+.env.*.local
 
 # Logs
+logs/
 *.log
 npm-debug.log*
 
-# OS/editor
-.DS_Store
-.vscode/
+# Test / coverage output
+coverage/
+.jest-cache/
 
-backend/bookmark.json
-backend/login.json
-backend/cookies.txt
+# mongodb-memory-server downloads binaries to a local cache
+.cache/
+**/mongodb-binaries/
+
+# Build output
+dist/
+build/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+
+# Scratch/test credential files
+login.json
+register.json
+cookies.txt
+body.json
