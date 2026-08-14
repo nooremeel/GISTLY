@@ -1,4 +1,6 @@
-const { validateEnv } = require('./config/env');
+require('dotenv').config();
+
+const validateEnv = require('./config/env');
 validateEnv();
 
 const connectDB = require('./config/db');
