@@ -15,7 +15,9 @@ async function request(path, options = {}) {
   }
 
   if (!res.ok) {
-    throw new Error(body?.message || res.statusText);
+    const err = new Error(body?.message || res.statusText);
+    err.status = res.status;
+    throw err;
   }
 
   return body;
