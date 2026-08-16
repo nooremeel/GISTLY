@@ -7,7 +7,7 @@ const { generateSummaryAndTags } = require('../services/aiService');
 // @route   POST /api/bookmarks
 const createBookmark = async (req, res) => {
   try {
-    const { url, note, tags: userTags = [], collection } = req.body;
+    const { title, url, note, tags: userTags = [], collection } = req.body;
     const { summary, tags: aiTags } = await generateSummaryAndTags({ url, note });
     const mergedTags = [...userTags, ...aiTags]
       .map((t) => t.trim())
@@ -15,6 +15,7 @@ const createBookmark = async (req, res) => {
       .filter((t, i, arr) => arr.findIndex((x) => x.toLowerCase() === t.toLowerCase()) === i);
     const bookmark = await Bookmark.create({
       user: req.user.id,
+      title,
       url,
       note,
       collection,
@@ -99,6 +100,7 @@ const updateBookmark = async (req, res) => {
       return res.status(404).json({ message: 'Bookmark not found' });
     }
 
+    if (title !== undefined) bookmark.title = title;
     if (url !== undefined) bookmark.url = url;
     if (note !== undefined) bookmark.note = note;
     if (tags !== undefined) bookmark.tags = tags;

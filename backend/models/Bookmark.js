@@ -8,6 +8,11 @@ const bookmarkSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    title: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     url: {
       type: String,
       trim: true,
@@ -40,7 +45,7 @@ bookmarkSchema.pre('validate', function (next) {
   if (!this.url && !this.note) {
     this.invalidate('url', 'Either a URL or a note is required.');
   }
-  
+
 });
 
 // Compound index to support Task 09's tag/folder aggregation queries
