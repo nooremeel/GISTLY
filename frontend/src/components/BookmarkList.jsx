@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
 import { apiClient } from '../api/client';
 import { useToast } from '../context/ToastContext';
 import BookmarkCard from './BookmarkCard';
@@ -7,7 +7,7 @@ import TagPills from './TagPills';
 
 const LIMIT = 12;
 
-export default function BookmarkList() {
+const BookmarkList = forwardRef(function BookmarkList(props, ref) {
   const [bookmarks, setBookmarks] = useState([]);
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
@@ -17,6 +17,14 @@ export default function BookmarkList() {
   const [activeTag, setActiveTag] = useState(null);
   const { showToast } = useToast();
 
+  // Exposes an imperative API so AddBookmarkForm (Task 17), which is not a
+  // direct child of this component, can prepend a newly created bookmark
+  // without triggering a refetch — consistent with handleUpdate/handleDelete.
+  useImperativeHandle(ref, () => ({
+    addBookmark: (newBookmark) => {
+      setBookmarks((prev) => [newBookmark, ...prev]);
+    },
+  }));
 
   const fetchPage = async (pageToFetch, { append }) => {
     append ? setLoadingMore(true) : setLoading(true);
@@ -84,4 +92,6 @@ export default function BookmarkList() {
       )}
     </div>
   );
-}
+});
+
+export default BookmarkList;
