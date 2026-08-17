@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { apiClient } from '../api/client';
 import { useToast } from '../context/ToastContext';
 import BookmarkCard from './BookmarkCard';
+import SearchBar from './SearchBar';
+import TagPills from './TagPills';
 
 const LIMIT = 12;
 
@@ -11,7 +13,10 @@ export default function BookmarkList() {
   const [pages, setPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeTag, setActiveTag] = useState(null);
   const { showToast } = useToast();
+
 
   const fetchPage = async (pageToFetch, { append }) => {
     append ? setLoadingMore(true) : setLoading(true);
@@ -26,6 +31,17 @@ export default function BookmarkList() {
       append ? setLoadingMore(false) : setLoading(false);
     }
   };
+
+  const allTags = [...new Set(bookmarks.flatMap((b) => b.tags || []))];
+
+  const filteredBookmarks = bookmarks.filter((b) => {
+    const matchesTag = !activeTag || (b.tags || []).includes(activeTag);
+
+    const haystack = `${b.title || ''} ${b.note || ''} ${b.url || ''}`.toLowerCase();
+    const matchesSearch = !searchTerm || haystack.includes(searchTerm.toLowerCase());
+
+    return matchesTag && matchesSearch;
+  });
 
   const handleUpdate = (updatedBookmark) => {
     setBookmarks((prev) =>
@@ -53,9 +69,11 @@ export default function BookmarkList() {
 
   return (
     <div>
+      <SearchBar value={searchTerm} onChange={setSearchTerm} />
+      <TagPills tags={allTags} activeTag={activeTag} onSelectTag={setActiveTag} />
       <div className="bookmark-list">
-        {bookmarks.map((bookmark) => (
-          <BookmarkCard key={bookmark._id} bookmark={bookmark} onUpdate={handleUpdate} onDelete={handleDelete}/>
+        {filteredBookmarks.map((bookmark) => (
+          <BookmarkCard key={bookmark._id} bookmark={bookmark} onUpdate={handleUpdate} onDelete={handleDelete} />
         ))}
       </div>
 
