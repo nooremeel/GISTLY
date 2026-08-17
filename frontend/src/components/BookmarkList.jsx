@@ -27,6 +27,16 @@ export default function BookmarkList() {
     }
   };
 
+  const handleUpdate = (updatedBookmark) => {
+    setBookmarks((prev) =>
+      prev.map((b) => (b._id === updatedBookmark._id ? updatedBookmark : b))
+    );
+  };
+
+  const handleDelete = (deletedId) => {
+    setBookmarks((prev) => prev.filter((b) => b._id !== deletedId));
+  };
+
   useEffect(() => {
     fetchPage(1, { append: false });
   }, []);
@@ -45,7 +55,7 @@ export default function BookmarkList() {
     <div>
       <div className="bookmark-list">
         {bookmarks.map((bookmark) => (
-          <BookmarkCard key={bookmark._id} bookmark={bookmark} />
+          <BookmarkCard key={bookmark._id} bookmark={bookmark} onUpdate={handleUpdate} onDelete={handleDelete}/>
         ))}
       </div>
 
