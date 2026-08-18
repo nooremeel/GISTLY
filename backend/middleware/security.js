@@ -2,8 +2,20 @@
 const helmet = require('helmet');
 const cors = require('cors');
 
+// CLIENT_ORIGIN may be a single origin or a comma-separated list
+// (e.g. staging + production frontend URLs).
+const allowedOrigins = (process.env.CLIENT_ORIGIN || '')
+  .split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean);
+
 const corsOptions = {
-  origin: process.env.CLIENT_ORIGIN,
+  origin: (origin, callback) => {
+    // Allow requests with no Origin header (curl, server-to-server, health checks)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
 };
 

@@ -37,21 +37,27 @@ export default function Register() {
         <form onSubmit={handleSubmit}>
             <h1>Register</h1>
             {error && <p style={{ color: 'red' }}>{error}</p>}
-            <input
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-            />
-            <input
-                type="password"
-                placeholder="Password (min 6 characters)"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-            />
+            <div className="form-field">
+                <label htmlFor="email">Email</label>
+                <input
+                    type="email"
+                    id="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                />
+            </div>
+            <div className="form-field">
+                <label htmlFor="password">Password</label>
+                <input
+                    type="password"
+                    id="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    minLength={6}
+                />
+            </div>
             <button type="submit" disabled={submitting}>
                 {submitting ? 'Creating account...' : 'Register'}
             </button>

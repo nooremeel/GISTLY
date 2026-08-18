@@ -77,45 +77,60 @@ export default function AddBookmarkForm({ onCreated }) {
     <div className="add-bookmark-form">
       <h2>Add Bookmark</h2>
       <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          name="title"
-          placeholder="Title (optional)"
-          value={form.title}
-          onChange={handleChange}
-          disabled={loading}
-        />
-        <input
-          type="text"
-          name="url"
-          placeholder="URL"
-          value={form.url}
-          onChange={handleChange}
-          disabled={loading}
-        />
-        <textarea
-          name="note"
-          placeholder="Note"
-          value={form.note}
-          onChange={handleChange}
-          disabled={loading}
-        />
-        <input
-          type="text"
-          name="tags"
-          placeholder="Tags (comma-separated)"
-          value={form.tags}
-          onChange={handleChange}
-          disabled={loading}
-        />
-        <input
-          type="text"
-          name="collection"
-          placeholder="Collection (optional)"
-          value={form.collection}
-          onChange={handleChange}
-          disabled={loading}
-        />
+        <div className="form-field">
+          <label htmlFor="title">Title</label>
+          <input
+            type="text"
+            name="title"
+            id="title"
+            value={form.title}
+            onChange={handleChange}
+            disabled={loading}
+          />
+        </div>
+        <div className="form-field">
+          <label htmlFor="url">URL</label>
+          <input
+            type="text"
+            name="url"
+            id="url"
+            value={form.url}
+            onChange={handleChange}
+            disabled={loading}
+          />
+        </div>
+        <div className="form-field">
+          <label htmlFor="note">Note</label>
+          <textarea
+            name="note"
+            id="note"
+            value={form.note}
+            onChange={handleChange}
+            disabled={loading}
+          />
+        </div>
+        <div className="form-field">
+          <label htmlFor="tags">Tags (comma seperated)</label>
+          <input
+            type="text"
+            name="tags"
+            id="tags"
+            value={form.tags}
+            onChange={handleChange}
+            disabled={loading}
+          />
+        </div>
+        <div className="form-field">
+          <label htmlFor="collection">Collection</label>
+          <input
+            type="text"
+            name="collection"
+            id="collection"
+            value={form.collection}
+            onChange={handleChange}
+            disabled={loading}
+          />
+        </div>
 
         <button type="submit" disabled={loading}>
           {loading ? 'Adding… (fetching page + generating summary)' : 'Add Bookmark'}

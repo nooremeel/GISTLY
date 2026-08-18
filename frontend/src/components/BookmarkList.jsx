@@ -80,6 +80,18 @@ const BookmarkList = forwardRef(function BookmarkList(props, ref) {
       <SearchBar value={searchTerm} onChange={setSearchTerm} />
       <TagPills tags={allTags} activeTag={activeTag} onSelectTag={setActiveTag} />
       <div className="bookmark-list">
+        {!loading && bookmarks.length === 0 && (
+          <div className="empty-state">
+            <p>No bookmarks yet.</p>
+            <p className="empty-state-sub">Add your first one using the form above.</p>
+          </div>
+        )}
+
+        {!loading && bookmarks.length > 0 && filteredBookmarks.length === 0 && (
+          <div className="empty-state">
+            <p>No bookmarks match your search or filter.</p>
+          </div>
+        )}
         {filteredBookmarks.map((bookmark) => (
           <BookmarkCard key={bookmark._id} bookmark={bookmark} onUpdate={handleUpdate} onDelete={handleDelete} />
         ))}

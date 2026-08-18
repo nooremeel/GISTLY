@@ -37,20 +37,26 @@ export default function Login() {
         <form onSubmit={handleSubmit}>
             <h1>Login</h1>
             {error && <p style={{ color: 'red' }}>{error}</p>}
-            <input
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-            />
-            <input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-            />
+            <div className="form-field">
+                <label htmlFor="email">Email</label>
+                <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                />
+            </div>
+            <div className="form-field">
+                <label htmlFor="password">Password</label>
+                <input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                />
+            </div>
             <button type="submit" disabled={submitting}>
                 {submitting ? 'Logging in...' : 'Login'}
             </button>

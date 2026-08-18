@@ -36,21 +36,26 @@ export default function EditBookmarkModal({ bookmark, onClose, onSaved }) {
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <h3>Edit Bookmark</h3>
         <form onSubmit={handleSubmit}>
-          <label>Title
-            <input value={title} onChange={(e) => setTitle(e.target.value)} />
-          </label>
-          <label>URL
-            <input value={url} onChange={(e) => setUrl(e.target.value)} />
-          </label>
-          <label>Note
-            <textarea value={note} onChange={(e) => setNote(e.target.value)} />
-          </label>
-          <label>Collection
-            <input value={collection} onChange={(e) => setCollection(e.target.value)} />
-          </label>
-          <label>Tags (comma separated)
-            <input value={tagsInput} onChange={(e) => setTagsInput(e.target.value)} />
-          </label>
+          <div className="form-field">
+            <label htmlFor="title">Title</label>
+            <input id="title" value={title} onChange={(e) => setTitle(e.target.value)} />
+          </div>
+          <div className="form-field">
+            <label htmlFor="url">URL</label>
+            <input id="url" value={url} onChange={(e) => setUrl(e.target.value)} />
+          </div>
+          <div className="form-field">
+            <label htmlFor="note">Note</label>
+            <textarea id="note" value={note} onChange={(e) => setNote(e.target.value)} />
+          </div>
+          <div className="form-field">
+            <label htmlFor="collection">Collection</label>
+            <input id="collection" value={collection} onChange={(e) => setCollection(e.target.value)} />
+          </div>
+          <div className="form-field">
+            <label htmlFor="tags">Tags (comma seperated)</label>
+            <input id="tags" value={tagsInput} onChange={(e) => setTagsInput(e.target.value)} />
+          </div>
           <div className="modal-actions">
             <button type="button" onClick={onClose} disabled={saving}>Cancel</button>
             <button type="submit" disabled={saving}>{saving ? 'Saving…' : 'Save'}</button>
