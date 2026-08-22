@@ -14,7 +14,7 @@ task block from `DESIGN_PLAN.md` as the first message of each new task's chat.
 `feature/Design-System` (shared for the whole redesign — see `DESIGN_PLAN.md`'s Working Agreement)
 
 ## Current Task
-Task 1 — Typography Setup
+Task 2 — Core UI Primitives (Button, Input, Badge/Pill)
 
 ## Completed Tasks
 - **Part A — Preparation:** Cloned repo, created `feature/design-system-migration` branch off `main`.
@@ -82,12 +82,49 @@ Task 1 — Typography Setup
   anyway; flag if any component built before then puts accent/lime/coral text directly on a dark
   surface, since that's the specific case the spec is warning about.
 
+- **Task 1 — Typography Setup:** Wired real font stacks into `--font-sans`/`--font-display`
+  (`@theme inline` block, `index.css`) and imported `@fontsource/manrope` (400/500/600) +
+  `@fontsource/fraunces` (500 only — the only weight the design system currently calls for) in
+  the app entry. Replaced the ad hoc `h1`/`h2` rules (56px/24px, negative letter-spacing) with
+  Task 0's `text-h1`/`text-h2`/`text-h3` tokens, added a global `h3` base style (previously
+  unstyled), and switched heading color/font-family from the legacy `--heading`/`--text-h`
+  variables to `--font-sans`/`--color-ink`. Updated the base body rule to Task 0's
+  `text-body`/`text-body--line-height` instead of the old `18px/145%`, and switched `color`/
+  `background` to `--color-muted`/`--color-paper`. Also updated the legacy `--sans`/`--heading`
+  variables (still consumed by these same rules) to the real Manrope stack, matching
+  `--font-sans`.
+  **Deviation:** `main.jsx` → `main.tsx` (not just edited in place) — the migration constraint
+  requires converting touched files to TypeScript as part of whichever task touches them; this
+  file needed no real type annotations beyond what `createRoot` infers, so it's a rename + font
+  imports, not a rewrite. `index.html`'s `<script type="module" src="/src/main.jsx">` updated to
+  `main.tsx` to match.
+  **Deviation:** the plan's target-file list included `frontend/tailwind.config.js` for this
+  task — that file doesn't exist under the v4/`@tailwindcss/vite` approach (config lives in
+  `index.css`, per Part A's decision), so there was nothing to do there. Carrying this forward
+  as a standing note: any future task-plan reference to `tailwind.config.js` is stale and should
+  be read as "the relevant `@theme` block in `index.css`."
+  **Fix (Part A gap, not a Task 1 deviation):** added the missing `frontend/src/vite-env.d.ts`
+  (`/// <reference types="vite/client" />`) — never created when the TS config files were added
+  in Part A. Invisible until now because `main.jsx` wasn't type-checked (`checkJs: false`); once
+  it became `main.tsx` for this task, `noUncheckedSideEffectImports` (already on in
+  `tsconfig.app.json`) needed it to accept the CSS side-effect imports (`import './index.css'`,
+  the four `@fontsource/*.css` imports). Verified via a real `npx tsc -b --noEmit` against the
+  cloned repo: reproduced the exact `TS2882` error with the file absent, confirmed it resolves
+  cleanly with just this one file added and nothing else changed.
+  **Decision (needs a real-browser check, not just spec-derived):** dropped the old
+  `@media (max-width: 1024px)` font-size shrinks on `body`/`h1`/`h2` and the old negative
+  letter-spacing on headings (`-1.68px`, `-0.24px`) and body (`0.18px`). Both were tuned to the
+  pre-redesign default sans stack; the design system's type scale (§3) gives fixed sizes with no
+  separate tablet step, and Manrope's metrics don't obviously need extra tracking. Flagging
+  rather than asserting this is final — if headings/body read too loose/tight at 1024px width in
+  the actual running app, the fix is scoped to this one rule block, not a scale change.
+
 ## Immediate Next Task
-Task 1 — Typography Setup. Import `@fontsource/manrope` + `@fontsource/fraunces` (already
-installed as runtime deps per Part A) into `main.jsx`, wire the real font-family stacks into the
-`--font-sans`/`--font-display` custom properties in `index.css` (replacing the current fallback-
-only placeholder), and apply base heading/body styles globally using the type-scale utilities
-Task 0 just added (`text-h1`, `text-body`, etc.) rather than one-off sizes.
+Task 2 — Core UI Primitives (Button, Input, Badge/Pill). Build `Button.tsx` (all variants per
+§7), `Input.tsx`/`Textarea.tsx` (§8), `Tag.tsx`/`Badge.tsx` (§12) as pure presentational
+components. These directly replace the TEMPORARY placeholder `input`/`textarea`/`select`/
+`button` block still sitting in `index.css` — delete that block once the real primitives ship
+and are wired into at least one real form, per that block's own inline comment.
 
 ## Key Decisions
 - **TypeScript migration strategy:** Incremental, file-by-file, as each component is redesigned
@@ -104,8 +141,8 @@ Task 0 just added (`text-h1`, `text-body`, etc.) rather than one-off sizes.
   recommended in the plan).
 - **Dark mode strategy:** `darkMode: 'media'` — matches the existing `prefers-color-scheme`
   approach, no manual toggle (Prep Step 3).
-- **Font loading:** Self-hosted via `@fontsource/manrope` + `@fontsource/fraunces` (Prep Step 4).
-  Not yet imported anywhere — that's Task 1.
+- **Font loading:** Self-hosted via `@fontsource/manrope` (400/500/600) + `@fontsource/fraunces`
+  (500), imported once in `main.tsx` (Prep Step 4, wired up in Task 1).
 - **Icon library:** `lucide-react` (Prep Step 5).
 - **Search fix approach:** Backend endpoint added (Task 11 included in `DESIGN_PLAN.md`), not
   deferred (Prep Step 6).
@@ -119,6 +156,9 @@ Task 0 just added (`text-h1`, `text-body`, etc.) rather than one-off sizes.
   everywhere without a design-system-specific class name to remember (Task 0).
 - **Spacing scale uses Tailwind v4's default numeric scale as-is** — no custom `--spacing-*`
   tokens — because it already matches design-system §4's px values at every key in use (Task 0).
+- **App entry is `main.tsx`, not `main.jsx`** — renamed in Task 1 since it was touched (font
+  imports) and the migration constraint requires converting touched files as they're touched.
+  `index.html`'s script tag points at `main.tsx` accordingly.
 
 ## Established Component APIs
 _(fill in as each primitive is built in Task 2 — e.g. `Button` prop signature, `Tag` prop
@@ -132,3 +172,6 @@ signature — so later tasks stay consistent instead of reinventing them)_
   contrast check fails against `#19191E`") not yet run — deferred to Task 18, but flag earlier if
   any task puts accent/lime/coral text directly on a dark surface before then (Task 0).
 - Logo/wordmark typeface choice deferred to Task 3.
+- Heading/body responsive behavior at the 1024px breakpoint was simplified to "no shrink" rather
+  than carrying forward the old scale's tablet step — worth a visual check once the app actually
+  renders at that width, not just a spec read (Task 1).

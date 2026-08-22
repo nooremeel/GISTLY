@@ -86,8 +86,8 @@
 
   /* Placeholder font mapping — unchanged. Task 1 wires these to the
      actual imported Manrope/Fraunces font files. */
-  --font-sans: Manrope, system-ui, 'Segoe UI', Roboto, sans-serif;
-  --font-display: Fraunces, ui-serif, Georgia, serif;
+  --font-sans: 'Manrope', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Fraunces', ui-serif, Georgia, serif;
   --font-mono: ui-monospace, Consolas, monospace;
 
   /* Spacing — deliberately not overridden. Tailwind v4's default scale
@@ -116,8 +116,8 @@
   --shadow:
     rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --sans: 'Manrope', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --heading: 'Manrope', system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
 
   /* ---- New bare variables — genuinely new concepts with no legacy
@@ -130,18 +130,17 @@
   --coral: #ff806f;
   --coral-border: rgba(255, 128, 111, 0.3);
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
+  font: var(--text-body) / var(--text-body--line-height) var(--font-sans);
   color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
+  color: var(--color-muted);
+  background: var(--color-paper);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
   @media (max-width: 1024px) {
-    font-size: 16px;
+    
   }
 }
 
@@ -196,30 +195,29 @@ body {
 }
 
 h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
+h2,
+h3 {
+  font-family: var(--font-sans);
+  font-weight: 600; /* H1/H2/H3 are all 600 per §3's scale table */
+  color: var(--color-ink);
 }
 
 h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
+  font-size: var(--text-h1);
+  line-height: var(--text-h1--line-height);
+  margin: 0 0 16px; /* space-4 */
 }
 h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
+  font-size: var(--text-h2);
+  line-height: var(--text-h2--line-height);
+  margin: 0 0 8px; /* space-2, unchanged from before */
 }
+h3 {
+  font-size: var(--text-h3);
+  line-height: var(--text-h3--line-height);
+  margin: 0 0 8px; /* space-2 */
+}
+
 p {
   margin: 0;
 }
