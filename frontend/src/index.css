@@ -2,18 +2,25 @@
 
 /*
   Tailwind v4 config lives in CSS, not tailwind.config.js.
-  This @theme block tells Tailwind which utility classes to generate
-  (bg-text, text-accent, font-display, etc.) and points every one of them
-  at the CSS custom properties already defined below in :root, instead of
-  hard-coding hex values here. That keeps :root as the single source of
-  truth — when the dark-mode @media block further down overrides --text,
-  --bg, etc., every Tailwind utility that uses them updates automatically,
-  no dark: prefix needed.
 
-  Task 0 will expand this list once the real design-system token names
-  (spacing scale, radius scale, full color palette) are available.
+  INCIDENT NOTE (Task 0 regression, now fixed): an earlier pass replaced
+  this whole file from the design-system spec alone instead of editing the
+  real file — deleting the body/#root layout, the h1/h2/p/code base styles,
+  the temporary input/textarea/select/button placeholder block (needed
+  until Task 2 ships real primitives), and every original --text/--bg/
+  --text-h/--border/--code-bg/--accent/--accent-bg/--accent-border/
+  --social-bg/--shadow/--sans/--heading/--mono variable — which broke
+  anything elsewhere in the app referencing them. A second attempt at the
+  fix then introduced new tokens as self-referencing variables
+  (`--color-ink: var(--color-ink)`), which is invalid CSS (a variable
+  defined in terms of itself resolves to nothing) — same failure mode,
+  narrower blast radius. This version fixes both: nothing pre-existing is
+  removed, and every new token aliases to a *distinctly-named* underlying
+  variable, exactly like the original --color-text: var(--text) pattern
+  already established below.
 */
 @theme inline {
+  /* Original mappings — byte-for-byte unchanged. */
   --color-text: var(--text);
   --color-text-h: var(--text-h);
   --color-bg: var(--bg);
@@ -24,21 +31,86 @@
   --color-accent-border: var(--accent-border);
   --color-social-bg: var(--social-bg);
 
-  /* Placeholder font mapping — Task 1 (Typography Setup) wires these to the
-     actual imported Manrope/Fraunces font files and applies them globally. */
+  /* New — design-system token names (gistly-design-system.md §2), Task 0.
+     Each aliases to a distinctly-named :root variable below (reusing the
+     legacy variable where the concept already existed, e.g. ink → the
+     existing --text-h holder) — never to itself. */
+  --color-ink: var(--text-h);
+  --color-muted: var(--text);
+  --color-paper: var(--bg);
+  --color-line: var(--border);
+  --color-accent-subtle: var(--accent-bg);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-faint: var(--faint);
+  --color-lime: var(--lime);
+  --color-lime-wash: var(--lime-wash);
+  --color-coral: var(--coral);
+  --color-coral-border: var(--coral-border);
+
+  /* Radius scale (§5) — static, no dark-mode variant, so literal values
+     are fine here. Overrides Tailwind's stock sm/md/lg; radius-feature is
+     net-new. */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-feature: 24px;
+
+  /* Shadow scale (§6) — static, no dark-mode variant per spec. Overrides
+     Tailwind's stock sm/md/lg. (The legacy bare --shadow variable below is
+     unrelated and keeps its own light/dark values, unchanged.) */
+  --shadow-sm: 0 1px 2px rgba(23, 22, 26, 0.04);
+  --shadow-md: 0 8px 30px rgba(23, 22, 26, 0.06);
+  --shadow-lg: 0 16px 48px rgba(23, 22, 26, 0.1);
+
+  /* Type scale (§3) — each role's value picked from the spec's range;
+     carries its own line-height, and text-micro its tracking. Static, so
+     literal values directly here. */
+  --text-display: 64px; /* 56–72px range */
+  --text-display--line-height: 1.1;
+  --text-h1: 40px; /* 36–44px range */
+  --text-h1--line-height: 1.15;
+  --text-h2: 28px; /* 26–30px range */
+  --text-h2--line-height: 1.25;
+  --text-h3: 20px; /* 19–21px range */
+  --text-h3--line-height: 1.3;
+  --text-body-lg: 18px; /* 17–18px range */
+  --text-body-lg--line-height: 1.6;
+  --text-body: 16px; /* 15–16px range */
+  --text-body--line-height: 1.6;
+  --text-small: 14px; /* 13–14px range */
+  --text-small--line-height: 1.4;
+  --text-micro: 12px; /* 11–12px range */
+  --text-micro--line-height: 1.4;
+  --text-micro--letter-spacing: 0.06em;
+
+  /* Placeholder font mapping — unchanged. Task 1 wires these to the
+     actual imported Manrope/Fraunces font files. */
   --font-sans: Manrope, system-ui, 'Segoe UI', Roboto, sans-serif;
   --font-display: Fraunces, ui-serif, Georgia, serif;
   --font-mono: ui-monospace, Consolas, monospace;
+
+  /* Spacing — deliberately not overridden. Tailwind v4's default scale
+     (--spacing: 0.25rem, 4px increments) already matches the design
+     system's §4 scale at every key it uses (p-4 = 16px ... p-24 = 96px). */
 }
 
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
+  /* ---- Legacy variables — same names as before, values updated to the
+     real design-system palette (this is Task 0's actual job: "update the
+     underlying CSS variables to match"). Everything that already
+     referenced these by name (below in this file, and possibly elsewhere
+     in the app) keeps working and now renders the new palette. ---- */
+  --text: #6f6b73; /* was #6b6375 — design-system §2 "muted" */
+  --text-h: #17161a; /* was #08060d — design-system §2 "ink" */
+  --bg: #f6f3ed; /* was #fff — design-system §2 "paper" */
+  --border: #ddd9d2; /* was #e5e4e7 — design-system §2 "line" */
+  --accent: #7357ff; /* was #aa3bff — design-system §2 "accent" (Gist Violet) */
+  --accent-bg: rgba(115, 87, 255, 0.09); /* was rgba(170,59,255,.1) — accent-subtle, §2 */
+
+  /* Left untouched — no clean 1:1 mapping in the new design system, and
+     changing these wasn't part of Task 0's scope. */
   --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
   --accent-border: rgba(170, 59, 255, 0.5);
   --social-bg: rgba(244, 243, 236, 0.5);
   --shadow:
@@ -47,6 +119,16 @@
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
   --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
+
+  /* ---- New bare variables — genuinely new concepts with no legacy
+     counterpart (surface tone, elevated surface, faint text, lime, coral). ---- */
+  --surface: #fffdf9;
+  --surface-elevated: #fffdf9; /* no light-mode value specified in §2 (dark-only row) — defaulted to surface; open question, see DESIGN_STATE.md */
+  --faint: #aaa6ad;
+  --lime: #dfff57;
+  --lime-wash: rgba(223, 255, 87, 0.13);
+  --coral: #ff806f;
+  --coral-border: rgba(255, 128, 111, 0.3);
 
   font: 18px/145% var(--sans);
   letter-spacing: 0.18px;
@@ -65,17 +147,31 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
+    --text: #a5a1aa; /* design-system §2 dark "muted" */
+    --text-h: #f4f1ea; /* design-system §2 dark "ink" */
+    --bg: #111114; /* design-system §2 dark "paper" */
+    --border: #323139; /* design-system §2 dark "line" */
+    /* Spec: "same hex, desaturated ~10–15% if a contrast check fails
+       against #19191E" — keeping the light-mode hex as-is for now; actual
+       pass/fail check deferred to Task 18 (Accessibility Audit). */
+    --accent: #7357ff;
+    --accent-bg: rgba(115, 87, 255, 0.09);
+
+    /* Untouched legacy tokens — dark values, unchanged from before. */
     --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
     --accent-border: rgba(192, 132, 252, 0.5);
     --social-bg: rgba(47, 48, 58, 0.5);
     --shadow:
       rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+
+    /* New bare variables — dark palette. */
+    --surface: #19191e;
+    --surface-elevated: #222229;
+    --faint: #aaa6ad; /* no dark-specific value given in §2 — kept same as light */
+    --lime: #dfff57;
+    --lime-wash: rgba(223, 255, 87, 0.13);
+    --coral: #ff806f;
+    --coral-border: rgba(255, 128, 111, 0.3);
   }
 
   #social .button-icon {

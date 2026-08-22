@@ -11,10 +11,10 @@ Current Task, log deviations/decisions, note open questions. Paste this whole fi
 task block from `DESIGN_PLAN.md` as the first message of each new task's chat.
 
 ## Current Active Branch
-`feature/design-system-migration` (shared for the whole redesign — see `DESIGN_PLAN.md`'s Working Agreement)
+`feature/Design-System` (shared for the whole redesign — see `DESIGN_PLAN.md`'s Working Agreement)
 
 ## Current Task
-Task 0 — Design Tokens & Tailwind Config
+Task 1 — Typography Setup
 
 ## Completed Tasks
 - **Part A — Preparation:** Cloned repo, created `feature/design-system-migration` branch off `main`.
@@ -48,10 +48,46 @@ Task 0 — Design Tokens & Tailwind Config
   preferred/current version — no lingering v3 files remain (`tailwind.config.js` and
   `postcss.config.js` were deleted).
 
+- **Task 0 — Design Tokens & Tailwind Config:** Rewrote `frontend/src/index.css` to carry the
+  full color/type/radius/shadow scale from `gistly-design-system.md` §2–§6, as plain CSS custom
+  properties in `:root` (light) and a `@media (prefers-color-scheme: dark)` override block
+  (dark — the "evening reading" palette, not an inversion), with a `@theme inline` block mapping
+  each into Tailwind's utility namespaces. Utilities now available: colors (`bg-paper`, `text-ink`,
+  `bg-surface`, `text-muted`, `text-faint`, `border-line`, `bg-accent`, `bg-accent-subtle`,
+  `bg-lime`, `bg-lime-wash`, `text-coral`, `border-coral-border`), radius (`rounded-sm` 6px,
+  `rounded-md` 10px, `rounded-lg` 16px, `rounded-feature` 24px — overrides Tailwind's stock
+  scale), shadow (`shadow-sm`/`shadow-md`/`shadow-lg` — overrides Tailwind's stock values;
+  `shadow-xl`/`shadow-2xl` left at Tailwind defaults but nothing in the design system calls for
+  them), and type scale (`text-display`, `text-h1`, `text-h2`, `text-h3`, `text-body-lg`,
+  `text-body`, `text-small`, `text-micro`, each carrying its own line-height, `text-micro` also
+  carrying its `0.06em` tracking). `font-sans`/`font-display`/`font-mono` mapping left as the
+  Part A placeholder stack (unchanged — real font files land in Task 1).
+  **Decision — spacing scale needs no custom tokens:** cross-checked design-system §4's scale
+  (`space-1..space-24` = 4/8/12/16/24/32/48/64/96px) against Tailwind v4's default spacing scale
+  (`--spacing: 0.25rem`, i.e. 4px increments) and confirmed they already line up exactly at every
+  key the design system uses (`p-1`→4px ... `p-24`→96px). No `--spacing-*` overrides were added;
+  `p-4`, `gap-6`, `mt-12`, etc. are correct out of the box.
+  **Decision — concrete type-scale values chosen from the spec's ranges** (spec gives ranges, not
+  single values): Display 64px, H1 40px, H2 28px, H3 20px, Body Large 18px, Body 16px, Small 14px,
+  Micro 12px. Revisit any individual value if a later task's rendered composition wants the other
+  end of its range — these aren't meant to be load-bearing precise, just a consistent starting
+  point.
+  **Open question carried forward:** `--color-surface-elevated` has no light-mode value in the
+  design system (§2's dark table only) — defaulted it to equal `--color-surface` in light mode.
+  Revisit if a future task (e.g. Task 12's search overlay, or dropdowns) needs a surface tone in
+  light mode that's visually distinct from a plain card. Also carried forward: the dark-mode
+  accent/lime/coral hex values are used as-is per the spec's default, without yet running the
+  "desaturate ~10–15% if a contrast check fails against `#19191E`" check the spec calls for —
+  deferred to Task 18 (Accessibility Audit Pass), where every text/background pair gets checked
+  anyway; flag if any component built before then puts accent/lime/coral text directly on a dark
+  surface, since that's the specific case the spec is warning about.
+
 ## Immediate Next Task
-Task 0 — Design Tokens & Tailwind Config. Needs the actual `gistly-design-system.md` color/type/
-spacing/radius/shadow values (only the placeholder set from `index.css` exists in the config
-right now) — attach the relevant sections when starting that task's chat.
+Task 1 — Typography Setup. Import `@fontsource/manrope` + `@fontsource/fraunces` (already
+installed as runtime deps per Part A) into `main.jsx`, wire the real font-family stacks into the
+`--font-sans`/`--font-display` custom properties in `index.css` (replacing the current fallback-
+only placeholder), and apply base heading/body styles globally using the type-scale utilities
+Task 0 just added (`text-h1`, `text-body`, etc.) rather than one-off sizes.
 
 ## Key Decisions
 - **TypeScript migration strategy:** Incremental, file-by-file, as each component is redesigned
@@ -78,13 +114,21 @@ right now) — attach the relevant sections when starting that task's chat.
 - **Branching model:** One shared branch (`feature/design-system-migration`) for all 21 tasks,
   not one branch per task like `PROJECT_PLAN.md`'s backend convention — this is a single
   cross-cutting change (Prep Step 7).
+- **Radius/shadow scales override Tailwind's stock scales directly** (same key names — `sm`,
+  `md`, `lg` — rather than new custom key names), so `rounded-lg`/`shadow-md`/etc. just work
+  everywhere without a design-system-specific class name to remember (Task 0).
+- **Spacing scale uses Tailwind v4's default numeric scale as-is** — no custom `--spacing-*`
+  tokens — because it already matches design-system §4's px values at every key in use (Task 0).
 
 ## Established Component APIs
 _(fill in as each primitive is built in Task 2 — e.g. `Button` prop signature, `Tag` prop
 signature — so later tasks stay consistent instead of reinventing them)_
 
 ## Open Questions
-- Task 0 needs the actual design-system token values (color palette, type scale, spacing scale,
-  radius scale, shadow scale) from `gistly-design-system.md` — that file wasn't part of what's in
-  this repo yet; attach it (or the relevant sections) when starting Task 0's chat.
+- `--color-surface-elevated` has no defined light-mode value in the design system (dark-mode-only
+  row in §2) — currently defaulted to equal `--color-surface`; revisit if a later task needs it
+  distinct (Task 0).
+- Dark-mode accent/lime/coral contrast-as-text-color check (spec's "desaturate ~10–15% if a
+  contrast check fails against `#19191E`") not yet run — deferred to Task 18, but flag earlier if
+  any task puts accent/lime/coral text directly on a dark surface before then (Task 0).
 - Logo/wordmark typeface choice deferred to Task 3.
