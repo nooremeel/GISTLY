@@ -1,3 +1,36 @@
+@import "tailwindcss";
+
+/*
+  Tailwind v4 config lives in CSS, not tailwind.config.js.
+  This @theme block tells Tailwind which utility classes to generate
+  (bg-text, text-accent, font-display, etc.) and points every one of them
+  at the CSS custom properties already defined below in :root, instead of
+  hard-coding hex values here. That keeps :root as the single source of
+  truth — when the dark-mode @media block further down overrides --text,
+  --bg, etc., every Tailwind utility that uses them updates automatically,
+  no dark: prefix needed.
+
+  Task 0 will expand this list once the real design-system token names
+  (spacing scale, radius scale, full color palette) are available.
+*/
+@theme inline {
+  --color-text: var(--text);
+  --color-text-h: var(--text-h);
+  --color-bg: var(--bg);
+  --color-border: var(--border);
+  --color-code-bg: var(--code-bg);
+  --color-accent: var(--accent);
+  --color-accent-bg: var(--accent-bg);
+  --color-accent-border: var(--accent-border);
+  --color-social-bg: var(--social-bg);
+
+  /* Placeholder font mapping — Task 1 (Typography Setup) wires these to the
+     actual imported Manrope/Fraunces font files and applies them globally. */
+  --font-sans: Manrope, system-ui, 'Segoe UI', Roboto, sans-serif;
+  --font-display: Fraunces, ui-serif, Georgia, serif;
+  --font-mono: ui-monospace, Consolas, monospace;
+}
+
 :root {
   --text: #6b6375;
   --text-h: #08060d;
@@ -108,4 +141,44 @@ code {
   line-height: 135%;
   padding: 4px 8px;
   background: var(--code-bg);
+}
+
+/*
+  TEMPORARY placeholder styling for plain <input>/<textarea>/<button>/<select>
+  elements across the app (Login, Register, AddBookmarkForm, EditBookmarkModal,
+  SearchBar, etc). None of these elements have CSS classes on them yet — they
+  relied entirely on the browser's built-in default appearance (a border, a
+  background, some padding). Tailwind's Preflight reset intentionally strips
+  that default browser styling so nothing fights with utility classes later,
+  which is why they went invisible after Task setup.
+
+  This block just restores a visible border/background/padding using the same
+  CSS variables as the rest of the app, so forms are usable in the meantime.
+  DELETE this block once Task 2 (Core UI Primitives) ships real Button.tsx /
+  Input.tsx / Textarea.tsx components — it is a stopgap, not the design system.
+*/
+input,
+textarea,
+select {
+  font: inherit;
+  color: var(--text-h);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  color: var(--text-h);
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 16px;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
