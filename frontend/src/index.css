@@ -248,31 +248,51 @@ code {
 
   This block just restores a visible border/background/padding using the same
   CSS variables as the rest of the app, so forms are usable in the meantime.
-  DELETE this block once Task 2 (Core UI Primitives) ships real Button.tsx /
-  Input.tsx / Textarea.tsx components — it is a stopgap, not the design system.
+  DELETE this block once every raw input/textarea/select/button in the app has
+  been migrated to the real Button.tsx/Input.tsx/Textarea.tsx primitives
+  (Task 2 shipped the primitives themselves; forms still using raw elements —
+  AddBookmarkForm, EditBookmarkModal, Login, Register, SearchBar — get wired
+  up in their own later tasks, so this stays in place until then).
+
+  FIX (Task 2, cascade-layers bug): this block must live inside `@layer base`.
+  Tailwind v4 emits all of its utility classes inside CSS cascade layers
+  (`@layer theme, base, components, utilities`). Per the cascade-layers spec,
+  *unlayered* CSS always wins over *any* layered CSS, regardless of selector
+  specificity. This block was originally unlayered plain CSS, which meant it
+  silently beat every Tailwind utility class applied to a real <button>/
+  <input>/<textarea> element — including the ones on Task 2's new primitives
+  (confirmed empirically: Button's `bg-ink`/`bg-accent`/etc. utility classes
+  were being overridden by this rule's `background: var(--code-bg)`, even
+  though the utility class has higher specificity — the layer, not the
+  specificity, decided it). Wrapping it in `@layer base` restores the correct
+  order: Tailwind's `utilities` layer now correctly beats this `base`-layer
+  rule, so primitives render per spec while any as-yet-unmigrated raw element
+  elsewhere in the app keeps this same stopgap look, unchanged.
 */
-input,
-textarea,
-select {
-  font: inherit;
-  color: var(--text-h);
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 8px 12px;
-}
+@layer base {
+  input,
+  textarea,
+  select {
+    font: inherit;
+    color: var(--text-h);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+  }
 
-button {
-  font: inherit;
-  cursor: pointer;
-  color: var(--text-h);
-  background: var(--code-bg);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 8px 16px;
-}
+  button {
+    font: inherit;
+    cursor: pointer;
+    color: var(--text-h);
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 16px;
+  }
 
-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
+  button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
 }

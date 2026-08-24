@@ -14,7 +14,7 @@ task block from `DESIGN_PLAN.md` as the first message of each new task's chat.
 `feature/Design-System` (shared for the whole redesign — see `DESIGN_PLAN.md`'s Working Agreement)
 
 ## Current Task
-Task 2 — Core UI Primitives (Button, Input, Badge/Pill)
+Task 3 — App Shell & Navigation
 
 ## Completed Tasks
 - **Part A — Preparation:** Cloned repo, created `feature/design-system-migration` branch off `main`.
@@ -119,12 +119,71 @@ Task 2 — Core UI Primitives (Button, Input, Badge/Pill)
   rather than asserting this is final — if headings/body read too loose/tight at 1024px width in
   the actual running app, the fix is scoped to this one rule block, not a scale change.
 
+- **Task 2 — Core UI Primitives (Button, Input, Badge/Pill):** Built five pure presentational
+  components, no data fetching, no form logic: `frontend/src/components/Button.tsx`,
+  `Input.tsx`, `Textarea.tsx`, `Tag.tsx`, `Badge.tsx`. Also added two small shared-code files:
+  `frontend/src/lib/cx.ts` (a ~3-line className combinator — written locally instead of adding
+  `clsx`/`cva` as a new dependency, since nothing here needs more than filtering falsy values)
+  and `frontend/src/components/formField.ts` (style-fragment constants shared by `Input`/
+  `Textarea` so the two can't visually drift from each other over time).
+  Every component reads its colors/radius/shadow/type/spacing exclusively from Task 0/1's
+  `@theme` tokens (`bg-ink`, `text-accent`, `rounded-md`, `text-small`, etc.) — no new ad hoc
+  values introduced anywhere.
+  **Bug found and fixed (blocking — not a Task 2 target file, but required for Task 2's own
+  deliverables to render at all):** the TEMPORARY placeholder block at the bottom of
+  `frontend/src/index.css` (styling bare `input`/`textarea`/`select`/`button` elements) was
+  written as plain, unlayered CSS. Tailwind v4 emits all of its own utility classes inside CSS
+  cascade layers (`@layer theme, base, components, utilities`), and per the cascade-layers spec,
+  *unlayered* CSS always wins over *any* layered CSS regardless of selector specificity. That
+  meant the placeholder's element-selector rules were silently beating every Tailwind utility
+  class applied to a real `<button>`/`<input>`/`<textarea>` — including the new primitives
+  themselves, which render as actual `<button>`/`<input>`/`<textarea>` elements with Tailwind
+  classNames. Confirmed empirically before fixing: built a throwaway smoke-test page rendering
+  all five primitives, ran a real `npx vite build`, and screenshotted it (Playwright/Chromium) —
+  every `Button` variant rendered pale gray instead of its spec'd color; computed
+  `background-color` traced back to the placeholder's `background: var(--code-bg)` rule, not the
+  `bg-ink`/`bg-accent`/etc. utility class that was correctly present in the compiled CSS and
+  correctly targeting the element. Fix: wrapped the placeholder block in `@layer base { ... }`
+  (one contained edit to `index.css`, nothing deleted or restructured). Rebuilt, retook the
+  screenshot (light + dark, plus keyboard-focus and active-tag states) — all five primitives now
+  render exactly per spec in both palettes. This block otherwise stays as-is (still styling
+  not-yet-migrated raw elements in `AddBookmarkForm`, `EditBookmarkModal`, `Login`, `Register`,
+  `SearchBar`) — deleting it is still gated on every one of those being migrated to the new
+  primitives in their own later tasks (7, 8, 9, 19), per the plan's existing sequencing. Comment
+  in `index.css` updated to explain both the original stopgap purpose and this layering fix, so a
+  future task doesn't accidentally revert it back to unlayered CSS.
+  **Decision — `Tag` is one component, not two:** renders as a `<span>` for static display (a
+  bookmark card's tag row) or a `<button>` when given an `onClick` (toolbar filter pills), same
+  visual treatment either way. Avoids needing `TagDisplay`/`TagButton` as separate components for
+  what's one design element in §12. `TagPills.jsx` is left untouched for now — swapping its
+  callers over to `Tag` is Task 10's job (Bookmark List + Filtering Fixes touches `SearchBar.jsx`
+  where the filter pills actually live), not Task 2's.
+  **Decision — `Input`'s size prop is named `sizeVariant`, not `size`:** `size` is already a
+  native `<input>` HTML attribute (number of visible characters) that the component forwards
+  through `...rest`; reusing the name for the `default`/`lg` visual variant from §8 would have
+  collided with it.
+  **Decision — `Button`'s `loading` prop is reserved for AI-triggering actions specifically**
+  (renders the pulsing Gist-mark/Sparkles motif per §7/§16), not a generic "any async action"
+  loading flag. For non-AI async actions (Login, Save edit, Delete) §16 calls for a plain
+  disabled state + text swap instead — callers handle that themselves by passing `disabled` and
+  swapping `children`, rather than setting `loading`.
+  **Open question (not blocking, flagging for later):** `frontend/eslint.config.js`'s `files`
+  glob is still `**/*.{js,jsx}` only — it's never covered `.ts`/`.tsx` files, going all the way
+  back to Part A/Task 1's `main.tsx` rename. Every file this task added is therefore currently
+  unlinted (`npx eslint` reports "File ignored because no matching configuration"). Didn't fix it
+  here since it's a project-wide tooling gap spanning every task's `.tsx` output so far, not
+  something specific to Task 2's scope — but it's been silently true since Task 1 and is worth a
+  small dedicated fix (extend the `files` glob, add `typescript-eslint`) sooner rather than at the
+  Task 18 cleanup pass, since it'll only get noisier the more `.tsx` files accumulate.
+  Verified via real tool runs, not just a read-through: `npx tsc -b --noEmit` (clean), `npx vite
+  build` (clean, confirmed `bg-ink`/`rounded-md`/etc. present in compiled CSS), and the
+  screenshot-based smoke test described above (light mode, dark mode, keyboard-focus ring on
+  `Input`, active/pressed state on `Tag`).
+
 ## Immediate Next Task
-Task 2 — Core UI Primitives (Button, Input, Badge/Pill). Build `Button.tsx` (all variants per
-§7), `Input.tsx`/`Textarea.tsx` (§8), `Tag.tsx`/`Badge.tsx` (§12) as pure presentational
-components. These directly replace the TEMPORARY placeholder `input`/`textarea`/`select`/
-`button` block still sitting in `index.css` — delete that block once the real primitives ship
-and are wired into at least one real form, per that block's own inline comment.
+Task 3 — App Shell & Navigation. Header bar + sidebar (Library/Tags/Collections), replacing the
+current flat `Home.jsx` layout. Includes the wordmark-only logo decision (Prep Step 8) — confirm
+typeface choice (Fraunces vs. Manrope Bold) as part of this task, per the open question below.
 
 ## Key Decisions
 - **TypeScript migration strategy:** Incremental, file-by-file, as each component is redesigned
@@ -161,10 +220,69 @@ and are wired into at least one real form, per that block's own inline comment.
   `index.html`'s script tag points at `main.tsx` accordingly.
 
 ## Established Component APIs
-_(fill in as each primitive is built in Task 2 — e.g. `Button` prop signature, `Tag` prop
-signature — so later tasks stay consistent instead of reinventing them)_
+_(Task 2. All five are pure presentational components — no data fetching, no form-submission
+logic. All accept a trailing `className` for one-off layout tweaks (margins, grid placement)
+without needing new variant props for every future use.)_
+
+### `Button` (`components/Button.tsx`)
+```ts
+variant?: 'primary' | 'accent' | 'secondary' | 'ghost' | 'destructive'; // default 'primary'
+size?: 'default' | 'compact';                                          // default 'default'
+loading?: boolean;   // AI-forward Gist-mark motif — AI-triggering actions only, see §16 note above
+// ...plus every native <button> attribute (disabled, type, onClick, aria-*, etc.)
+```
+Forwards `ref`. Defaults `type="button"` (pass `type="submit"` explicitly on forms). Dev-mode
+console warning if it looks icon-only (non-string/number `children`) with no `aria-label`/
+`aria-labelledby` (§22).
+
+### `Input` (`components/Input.tsx`)
+```ts
+label?: ReactNode;
+error?: string;                       // sets aria-invalid, coral border, message below
+sizeVariant?: 'default' | 'lg';       // 'lg' = the "Paste a URL" field treatment, §8
+leadingIcon?: ReactNode;              // search field's leading icon; §8's one carved-out exception
+wrapperClassName?: string;            // className for the outer label+field+error wrapper
+// ...plus every native <input> attribute
+```
+Forwards `ref` to the `<input>`. Auto-generates an `id` via `useId()` if none passed, so
+`label`/`htmlFor` pairing works even when the caller doesn't manage ids.
+
+### `Textarea` (`components/Textarea.tsx`)
+```ts
+label?: ReactNode;
+error?: string;
+wrapperClassName?: string;
+// ...plus every native <textarea> attribute; `rows` defaults to 3 per §8's minimum
+```
+Same id/ref/error behavior as `Input`. Resize is locked to vertical only (`resize-y`).
+
+### `Tag` (`components/Tag.tsx`)
+```ts
+active?: boolean;     // filter-pill selected state (§12) — leave unset for static display tags
+noPrefix?: boolean;   // suppress the auto-added "#" — for the "+2" overflow indicator, not a tag name
+children: ReactNode;
+onClick?: (e) => void; // presence of onClick is what switches the render from <span> to <button>
+```
+Renders `<span>` when no `onClick` is passed (static display, e.g. a bookmark card's tag row),
+`<button type="button">` with `aria-pressed` when `onClick` is passed (toolbar filter pills) —
+same visual component either way.
+
+### `Badge` (`components/Badge.tsx`)
+```ts
+variant?: 'neutral' | 'success' | 'error'; // default 'neutral' — §12's collection badge
+children: ReactNode;
+```
+`neutral` = collection badge (muted text, faint bg, no border — deliberately distinct from
+`Tag`'s bordered pill shape). `success`/`error` follow §2's semantic mapping (lime+ink / coral)
+for "processed" badges and similar status labels — not yet consumed by any component, added for
+Task 5 (Gist "processed" state) and Task 14 (error states) to reuse rather than reinvent.
 
 ## Open Questions
+- `frontend/eslint.config.js` still only lints `.js`/`.jsx` (`files: ['**/*.{js,jsx}']`) — every
+  `.ts`/`.tsx` file added since Part A/Task 1, including all of Task 2's new primitives, is
+  currently unlinted. Not fixed as part of Task 2 since it's a pre-existing, project-wide gap
+  rather than something this task introduced — but flagging it as worth a small dedicated fix
+  (extend the glob, add `typescript-eslint`) before it accumulates further.
 - `--color-surface-elevated` has no defined light-mode value in the design system (dark-mode-only
   row in §2) — currently defaulted to equal `--color-surface`; revisit if a later task needs it
   distinct (Task 0).
