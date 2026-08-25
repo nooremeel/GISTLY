@@ -19,7 +19,7 @@ touch remote tracking/PR state outside this task's scope — but flagging so fut
 right branch name and don't assume a second, different branch exists.
 
 ## Current Task
-Task 4 — Bookmark Card Redesign
+Task 5 — AI Gist Component
 
 ## Completed Tasks
 - **Part A — Preparation:** Cloned repo, created `feature/design-system-migration` branch off `main`.
@@ -241,11 +241,89 @@ Task 4 — Bookmark Card Redesign
   keyboard focus-visible ring on the sidebar's active nav item) confirming layout, dark-mode
   palette, and §22 focus-ring requirements all render correctly; a live-server pixel-sampling
   check (described above) confirming the `#root` fix and Login/Register's unchanged framing.
+  
+  - **Task 4 — Bookmark Card Redesign:** Rewrote `frontend/src/components/BookmarkCard.jsx` →
+  `.tsx` per §10/§11/§12, and added `frontend/src/types/bookmark.ts` (new — the shared
+  `Bookmark` interface every later task should import rather than redeclare).
+  Left-aligned layout; domain-only metadata line (`getDomain()` — parses via `URL`, strips
+  `www.`, falls back to `null` on anything unparseable rather than showing a mangled string);
+  H3 title as the card's heaviest element; inline Gist block (Sparkles + `GIST` label in
+  `text-micro`/accent, `bg-lime-wash` container, `radius-md`, `space-4` padding — the wash
+  variant from §11's two options, not the left-border alternative, see decision below); user
+  note rendered separately/subordinate below it; tag row capped at 4 visible tags + a `+N`
+  overflow `Tag` (`noPrefix`); collection as a `Badge`; relative timestamp (`3m ago` style,
+  local `formatRelativeTime()` helper). Actions (Edit/Delete) are hover-*and*-keyboard-focus-
+  revealed compact icon buttons (`Pencil`/`Trash2` from `lucide-react`, `Button` `ghost`/
+  `destructive` `compact` variants, both with `aria-label`) rather than a `⋯` overflow menu —
+  see decision below. Hover state: `-translate-y-0.5` + `shadow-sm` + `border-accent/30`, all
+  under a single `motion-reduce:transition-none` (final hover state still applies instantly
+  under reduced motion, per §21 — only the animation is dropped, not the state change).
+
+  **Bug found and fixed (blocking — not a Task 4 target file, but required for this task's
+  own deliverable to type-check at all, same category as Task 2's/Task 3's "found and fixed"
+  notes):** `useToast()` (`context/ToastContext.jsx`) type-resolves to `never` for any
+  consumer under `strict` — `createContext(null)` plus the hook's `if (!ctx) throw ...; return
+  ctx` guard narrows the only possible type (`null`) away, leaving `never`, so
+  `showToast(...)` doesn't type-check as callable. Confirmed via a real `npx tsc -b --noEmit`
+  reproducing `TS2349` on both `showToast` calls. This is squarely Task 9's file ("Toast
+  System Redesign") — not touching it here. Fix is scoped entirely to `BookmarkCard.tsx`: a
+  local `ShowToast` type alias and a cast on the hook's return value
+  (`useToast() as { showToast: ShowToast }`), matching `showToast`'s actual runtime signature
+  (`context/ToastContext.jsx`'s `showToast(message, type = 'info', duration = 3500)`). Nothing
+  in `ToastContext.jsx` itself changed. Flagging so Task 9 knows this `never`-typing issue
+  exists and can fix it at the source (e.g. a typed context value / non-null default) rather
+  than being surprised other files have worked around it locally.
+
+  **Decision — Gist container uses the background-wash treatment, not the left-border
+  alternative:** §11 offers both ("test both... wash reads more 'highlighted', left-border
+  reads more 'editorial annotation'") without picking one. Went with the wash
+  (`bg-lime-wash`, already defined as a token) since it's the higher-visibility option and
+  the Gist is explicitly called out as "the single most visually distinct element on a card"
+  (§1) — revisit if Task 5's dedicated pass finds the left-border reads better once it's the
+  Gist's own component with more surrounding chrome to distinguish it.
+
+  **Decision — hover-revealed Edit/Delete icon buttons, not a `⋯` overflow menu:** §10 offers
+  both as acceptable ("move into a `⋯` overflow menu or become hover-revealed"). Picked the
+  buttons because a `⋯` menu needs its own popover/keyboard-nav/dismiss-on-outside-click
+  implementation (the same category of work as `AccountMenu.tsx`) that isn't otherwise in this
+  task's scope, while two compact icon buttons reuse `Button` as-is and still satisfy the
+  "not two permanently-visible buttons at the bottom of every card" requirement by being
+  hover/focus-revealed. Both buttons carry `aria-label`s per §22's icon-only-button rule.
+  Revisit if a future task (e.g. once more per-card actions exist) wants the overflow-menu
+  version instead.
+
+  **Decision — domain line only renders alongside a real title, not standalone:** if
+  `bookmark.title` is empty, the H3 headline itself falls back to the domain (or, failing
+  that, the raw `url`, or finally `"Untitled bookmark"`) rather than showing the domain twice
+  (once as the H3 fallback, once as the metadata line). Slightly different from the original
+  file's fallback chain (`title || url`) — now `title || domain || url || 'Untitled bookmark'`
+  — a deliberate visual improvement (domain reads cleaner than a raw URL as a heading) that's
+  within this task's scope, not a functional-contract change.
+
+  **Decision — Gist stays inline in `BookmarkCard.tsx`, not extracted to `Gist.tsx` yet:**
+  Task 5 ("AI Gist Component") is explicitly scoped as the extraction task, including the
+  entrance animation. Building it inline here (matching §11's visual spec exactly, just not
+  yet its own file) avoids Task 4 doing part of Task 5's job and leaves Task 5 a clean,
+  well-defined "extract + animate" scope instead of "extract + animate + also fix the visual
+  spec."
+
+  **Verified via real tool runs:** `npx tsc -b --noEmit` (clean), `npx vite build` (clean).
+  Playwright screenshots against a temporary smoke-test entry (mounting `BookmarkCard`
+  directly with mock data covering: a normal bookmark with title/url/note/summary/5 tags; a
+  no-title bookmark with url+collection only, no summary — `summary: null` case; a note-only
+  bookmark with no url and no title) — confirmed light mode, dark mode, mouse-hover state
+  (actions fade in, border/shadow lift), and **keyboard-focus state** (Tab lands on the Edit
+  button; actions become visible via `group-focus-within`, not just `group-hover` — confirms
+  the hover-reveal doesn't strand keyboard users, per §22). Smoke-test files (`smoke.html`,
+  `src/smoke-main.tsx`) were temporary and deleted after verification — not part of the
+  actual deliverable.
 
 ## Immediate Next Task
-Task 4 — Bookmark Card Redesign. Rebuild `BookmarkCard`: left-aligned layout, domain-only
-metadata line, tag row with overflow, collection badge, hover/selected states. Add a `Bookmark`
-TypeScript type for later tasks to reuse.
+Task 5 — AI Gist Component. Extract the Gist block built inline in Task 4's `BookmarkCard.tsx`
+into its own `frontend/src/components/Gist.tsx`: same label/container/text treatment already
+shipped, plus the §11 entrance animation (fade + expand from 0 to full height, ~300ms) for
+when a summary streams in after bookmark creation. Must preserve the `summary: null` fail-soft
+contract — omit the block entirely, never render an empty/error state for it.
 
 ## Key Decisions
 - **TypeScript migration strategy:** Incremental, file-by-file, as each component is redesigned
@@ -287,6 +365,12 @@ TypeScript type for later tasks to reuse.
   new `.legacy-page-frame` class, applied only to `Login.jsx`/`Register.jsx` so their appearance
   is unchanged until Task 19 redesigns them, freeing `#root` to be a plain full-height flex
   container the App Shell can fill edge-to-edge (Task 3).
+- **Gist container: background-wash (`bg-lime-wash`), not left-border** — picked for maximum
+  visual distinctness per §1's "Gist is the single most visually distinct element" framing;
+  open to revisiting in Task 5 (Task 4).
+- **Card actions: hover/focus-revealed icon buttons, not a `⋯` overflow menu** — avoids
+  building popover/dismiss/keyboard-nav machinery not otherwise in scope; both variants were
+  acceptable per §10 (Task 4).
 
 ## Established Component APIs
 _(Task 2. All five are pure presentational components — no data fetching, no form-submission
@@ -361,3 +445,7 @@ Task 5 (Gist "processed" state) and Task 14 (error states) to reuse rather than 
 - Heading/body responsive behavior at the 1024px breakpoint was simplified to "no shrink" rather
   than carrying forward the old scale's tablet step — worth a visual check once the app actually
   renders at that width, not just a spec read (Task 1).
+  - `useToast()` in `context/ToastContext.jsx` type-resolves to `never` under `strict` TS
+  (`createContext(null)` + its throw-guard narrows away the only type). Worked around locally
+  in `BookmarkCard.tsx` via a scoped cast; the real fix (giving the context a proper typed
+  value/non-null default) belongs to Task 9 (Toast System Redesign) (Task 4).
