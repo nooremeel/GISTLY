@@ -12,9 +12,14 @@ task block from `DESIGN_PLAN.md` as the first message of each new task's chat.
 
 ## Current Active Branch
 `feature/Design-System` (shared for the whole redesign — see `DESIGN_PLAN.md`'s Working Agreement)
+**Naming note:** `DESIGN_PLAN.md`'s Working Agreement and this file's own "Key Decisions" section
+both refer to this branch as `feature/design-system-migration`, but the actual branch already in
+use (Tasks 0–2's commits are on it) is `feature/Design-System`. Not renaming it now — that would
+touch remote tracking/PR state outside this task's scope — but flagging so future tasks paste the
+right branch name and don't assume a second, different branch exists.
 
 ## Current Task
-Task 3 — App Shell & Navigation
+Task 4 — Bookmark Card Redesign
 
 ## Completed Tasks
 - **Part A — Preparation:** Cloned repo, created `feature/design-system-migration` branch off `main`.
@@ -180,10 +185,67 @@ Task 3 — App Shell & Navigation
   screenshot-based smoke test described above (light mode, dark mode, keyboard-focus ring on
   `Input`, active/pressed state on `Tag`).
 
+- **Task 3 — App Shell & Navigation:** Built the header + sidebar shell (§13) and wired it in as a
+  layout route: `frontend/src/components/AppShell.tsx` (new — `Outlet`-based wrapper, mounted
+  inside `ProtectedRoute` in `App.tsx` so `user` is guaranteed by the time it renders),
+  `Header.tsx` (new — wordmark, header search field, "+ Add", `AccountMenu`), `Sidebar.tsx` (new
+  — Library/Tags/Collections nav; Tags and Collections render as inert "Soon"-badged rows since
+  neither has a page yet), `AccountMenu.tsx` (new — replaces the old bare "Logged in as ...
+  Logout" text strip; self-contained open/close state, closes on outside-click and Escape,
+  returns focus to the trigger on close). `App.tsx` updated to nest the authenticated route inside
+  `AppShell`. `Home.tsx` simplified now that login-status text and the logout button live in
+  `AccountMenu`; kept its `/api/health` check and existing `AddBookmarkForm`/`BookmarkList`
+  wiring unchanged, added an `id="add-bookmark"` anchor section so the header's "+ Add" button has
+  something real to scroll to (see `Header.tsx`'s comment — a working affordance, not a dead
+  button, until Task 7's proper flow).
+  **Wordmark typeface — resolved (Prep Step 8's open question):** Manrope semibold (`font-sans`,
+  `text-h3`), not Fraunces. §3 is explicit that the display serif is reserved for a short,
+  named list of genuinely editorial moments (first-run empty state, auth pages' supporting line)
+  and "never in functional UI" — the header wordmark, sitting in the shell's permanent chrome, is
+  functional UI by that definition, and §1's "chrome stays quiet" principle points the same
+  direction. Treating this as decided; revisit only if a future task finds a concrete reason
+  Fraunces reads better there in practice.
+  **Bug found and fixed (blocking — not a Task 3 target file, but required for the shell to
+  actually render full-width per §13, same category as Task 2's cascade-layers fix):**
+  `frontend/src/index.css`'s `#root` rule — `width: 1126px; margin: 0 auto; border-inline: 1px
+  solid var(--border); text-align: center` — predates the redesign (preserved as-is through Tasks
+  0–2 per the Task 0 incident note) and was written for the old single-page, centered app. It was
+  silently clipping the new header/sidebar shell to that same centered 1126px framed column
+  instead of letting it span the viewport. Confirmed empirically, not just by inspection: built a
+  real `npx vite build`, served it, and sampled pixel colors on a Playwright screenshot at a
+  1280px viewport — the header's surface color stopped dead at x=78/x=1201 with visible
+  border-inline hairlines at x=77/x=1202, confirming the shell was rendering inside the old frame.
+  Fix: removed the width/margin/border-inline/text-align from `#root` (now a plain full-height
+  flex container) and moved those exact declarations into a new `.legacy-page-frame` class,
+  applied via a wrapper `<div>` in `Login.jsx` and `Register.jsx` only — the two pages that still
+  depend on this framing and aren't redesigned until Task 19. Re-verified after the fix: same
+  pixel-sampling method now shows the header's surface color spanning the full viewport width
+  edge-to-edge with no border artifacts, while a fresh screenshot of `/login` at the same 1280px
+  viewport shows the border-inline hairlines at the exact same x=77/x=1202 positions as before the
+  fix — Login/Register's rendered output is unchanged.
+  **Decision — `Login.jsx`/`Register.jsx` stay `.jsx`, not renamed to `.tsx`, despite being
+  touched:** the touch here is a single wrapper `<div className="legacy-page-frame">` with no
+  logic or prop changes — no real type annotation need, unlike `main.jsx`'s Task 1 rename which
+  had the same "trivial touch" shape. Diverging from that precedent here because Task 19's target
+  file list already explicitly names `Login.jsx → .tsx` / `Register.jsx → .tsx` as its own
+  deliverable (full redesign + conversion, sharing Task 2's form primitives) — doing a bare rename
+  now would fragment that task's target files without doing any of the actual typing work, for no
+  benefit. Flagging this as a considered exception, not an oversight, in case a later task expects
+  every touched file to already be `.tsx` by this point.
+  **Decision — `Header.tsx`'s search field is a real but inert `Input`, not built out:** disabled,
+  `title="Search is coming soon"`, no local filtering logic. Task 12 (⌘K overlay) depends on Task
+  11's backend search endpoint; building working client-side search here would mean writing logic
+  that gets thrown away once Task 12 lands.
+  **Verified via real tool runs:** `npx tsc -b --noEmit` (clean), `npx vite build` (clean),
+  Playwright screenshots (light mode, dark mode, mobile width/390px, account-menu open state,
+  keyboard focus-visible ring on the sidebar's active nav item) confirming layout, dark-mode
+  palette, and §22 focus-ring requirements all render correctly; a live-server pixel-sampling
+  check (described above) confirming the `#root` fix and Login/Register's unchanged framing.
+
 ## Immediate Next Task
-Task 3 — App Shell & Navigation. Header bar + sidebar (Library/Tags/Collections), replacing the
-current flat `Home.jsx` layout. Includes the wordmark-only logo decision (Prep Step 8) — confirm
-typeface choice (Fraunces vs. Manrope Bold) as part of this task, per the open question below.
+Task 4 — Bookmark Card Redesign. Rebuild `BookmarkCard`: left-aligned layout, domain-only
+metadata line, tag row with overflow, collection badge, hover/selected states. Add a `Bookmark`
+TypeScript type for later tasks to reuse.
 
 ## Key Decisions
 - **TypeScript migration strategy:** Incremental, file-by-file, as each component is redesigned
@@ -218,6 +280,13 @@ typeface choice (Fraunces vs. Manrope Bold) as part of this task, per the open q
 - **App entry is `main.tsx`, not `main.jsx`** — renamed in Task 1 since it was touched (font
   imports) and the migration constraint requires converting touched files as they're touched.
   `index.html`'s script tag points at `main.tsx` accordingly.
+- **Wordmark typeface: Manrope semibold, not Fraunces** — the header wordmark is permanent shell
+  chrome, and §3 reserves the display serif for a short list of genuinely editorial moments,
+  explicitly excluding functional UI (Task 3).
+- **`#root` no longer carries a fixed centered width/border** — that pre-redesign rule moved to a
+  new `.legacy-page-frame` class, applied only to `Login.jsx`/`Register.jsx` so their appearance
+  is unchanged until Task 19 redesigns them, freeing `#root` to be a plain full-height flex
+  container the App Shell can fill edge-to-edge (Task 3).
 
 ## Established Component APIs
 _(Task 2. All five are pure presentational components — no data fetching, no form-submission
@@ -289,7 +358,6 @@ Task 5 (Gist "processed" state) and Task 14 (error states) to reuse rather than 
 - Dark-mode accent/lime/coral contrast-as-text-color check (spec's "desaturate ~10–15% if a
   contrast check fails against `#19191E`") not yet run — deferred to Task 18, but flag earlier if
   any task puts accent/lime/coral text directly on a dark surface before then (Task 0).
-- Logo/wordmark typeface choice deferred to Task 3.
 - Heading/body responsive behavior at the 1024px breakpoint was simplified to "no shrink" rather
   than carrying forward the old scale's tablet step — worth a visual check once the app actually
   renders at that width, not just a spec read (Task 1).

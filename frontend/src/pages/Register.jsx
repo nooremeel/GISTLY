@@ -1,3 +1,4 @@
+// frontend/src/pages/Register.jsx
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -34,36 +35,39 @@ export default function Register() {
     }
 
     return (
-        <form onSubmit={handleSubmit}>
-            <h1>Register</h1>
-            {error && <p style={{ color: 'red' }}>{error}</p>}
-            <div className="form-field">
-                <label htmlFor="email">Email</label>
-                <input
-                    type="email"
-                    id="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                />
-            </div>
-            <div className="form-field">
-                <label htmlFor="password">Password</label>
-                <input
-                    type="password"
-                    id="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    minLength={6}
-                />
-            </div>
-            <button type="submit" disabled={submitting}>
-                {submitting ? 'Creating account...' : 'Register'}
-            </button>
-            <p>
-                Already have an account? <Link to="/login">Login</Link>
-            </p>
-        </form>
+
+        <div className="legacy-page-frame">
+            <form onSubmit={handleSubmit}>
+                <h1>Register</h1>
+                {error && <p style={{ color: 'red' }}>{error}</p>}
+                <div className="form-field">
+                    <label htmlFor="email">Email</label>
+                    <input
+                        type="email"
+                        id="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                    />
+                </div>
+                <div className="form-field">
+                    <label htmlFor="password">Password</label>
+                    <input
+                        type="password"
+                        id="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        minLength={6}
+                    />
+                </div>
+                <button type="submit" disabled={submitting}>
+                    {submitting ? 'Creating account...' : 'Register'}
+                </button>
+                <p>
+                    Already have an account? <Link to="/login">Login</Link>
+                </p>
+            </form>
+        </div>
     );
 }

@@ -1,3 +1,4 @@
+// frontend/src/pages/Login.jsx
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -34,35 +35,38 @@ export default function Login() {
     }
 
     return (
-        <form onSubmit={handleSubmit}>
-            <h1>Login</h1>
-            {error && <p style={{ color: 'red' }}>{error}</p>}
-            <div className="form-field">
-                <label htmlFor="email">Email</label>
-                <input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                />
-            </div>
-            <div className="form-field">
-                <label htmlFor="password">Password</label>
-                <input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                />
-            </div>
-            <button type="submit" disabled={submitting}>
-                {submitting ? 'Logging in...' : 'Login'}
-            </button>
-            <p>
-                No account? <Link to="/register">Register</Link>
-            </p>
-        </form>
+
+        <div className="legacy-page-frame">
+            <form onSubmit={handleSubmit}>
+                <h1>Login</h1>
+                {error && <p style={{ color: 'red' }}>{error}</p>}
+                <div className="form-field">
+                    <label htmlFor="email">Email</label>
+                    <input
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                    />
+                </div>
+                <div className="form-field">
+                    <label htmlFor="password">Password</label>
+                    <input
+                        id="password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                    />
+                </div>
+                <button type="submit" disabled={submitting}>
+                    {submitting ? 'Logging in...' : 'Login'}
+                </button>
+                <p>
+                    No account? <Link to="/register">Register</Link>
+                </p>
+            </form>
+        </div>
     );
 }
