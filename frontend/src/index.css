@@ -375,3 +375,48 @@ code {
     }
   }
 }
+
+/*
+  Skeleton shimmer animation (design system §16 / Task 6).
+  Used by BookmarkCardSkeleton's placeholder bars.
+
+  Uses --line (border token, soft gray) and --surface-elevated (slightly
+  lighter) so the sweep works in both light and dark mode via the same
+  CSS variables the rest of the system uses — no hardcoded colors.
+
+  1.6s / ease-in-out = calm, not urgent, per §16's instruction that
+  skeleton animations "should read as calm 'thinking', not urgent loading."
+
+  prefers-reduced-motion: animation: none — the placeholder bars still
+  render at the resting --line background color, just without the sweep.
+  State change is preserved (skeleton still visible); only the motion
+  is removed, per §21.
+*/
+@keyframes shimmer {
+  from {
+    background-position: -200% center;
+  }
+  to {
+    background-position: 200% center;
+  }
+}
+
+@layer utilities {
+  .animate-shimmer {
+    background: linear-gradient(
+      90deg,
+      var(--line) 25%,
+      var(--surface-elevated) 50%,
+      var(--line) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.6s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-shimmer {
+      animation: none;
+      background: var(--line);
+    }
+  }
+}

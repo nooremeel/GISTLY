@@ -19,7 +19,7 @@ touch remote tracking/PR state outside this task's scope — but flagging so fut
 right branch name and don't assume a second, different branch exists.
 
 ## Current Task
-Task 6 — Loading States (Skeletons + Processing Card)
+Task 8 — Edit Modal Redesign + Accessibility Fix
 
 ## Completed Tasks
 - **Part A — Preparation:** Cloned repo, created `feature/design-system-migration` branch off `main`.
@@ -363,13 +363,109 @@ Task 6 — Loading States (Skeletons + Processing Card)
   keyframes), `.animate-gist-enter` with the correct `animation:` shorthand, and the
   `prefers-reduced-motion` override — all present in the production bundle.
 
+  - **Task 6 — Loading States (Skeletons + Processing Card):** Three new files shipped:
+  `frontend/src/components/BookmarkCardSkeleton.tsx` (new — pure skeleton, default export only),
+  `frontend/src/components/ProcessingCard.tsx` (new — separate file per user decision; shows
+  known bookmark data + pulsing Gist placeholder while AI generates the summary),
+  `frontend/src/index.css` (modified — `@keyframes shimmer` + `.animate-shimmer` utility in
+  `@layer utilities`). `BookmarkList.jsx` minimally touched: `BookmarkCardSkeleton` import added,
+  the bare `<p>Loading bookmarks...</p>` early return replaced with 3 skeleton cards in an
+  `aria-busy` container.
+
+  **`BookmarkCardSkeleton`:** same outer shell as `BookmarkCard` (`rounded-lg border border-line
+  bg-surface p-6`) to prevent layout shift on load. Placeholder bars are `rounded-sm
+  animate-shimmer` `<div>`s sized to approximate typical card content rows (domain, 2-line title,
+  Gist block, tag row). The whole card is `aria-hidden="true"`; the list wrapper carries
+  `aria-busy="true" aria-label="Loading your bookmarks"` so screen readers hear one meaningful
+  announcement, not three meaningless skeleton descriptions.
+
+  **`ProcessingCard`:** shows real title/domain/tags/collection immediately. In the Gist slot:
+  lime-wash container (matching `Gist.tsx`'s container dimensions for stable height), pulsing
+  `Sparkles` icon (`animate-pulse motion-reduce:animate-none` — the same Gist-mark motif as
+  `Button`'s loading state per §7/§16), label text `"Reading the page & forming a gist…"` in
+  `text-micro text-muted`, plus two shimmer bars hinting at incoming text. The container carries
+  `role="status" aria-label="Gist is being generated"` (§22 — no color-only signaling). The card
+  itself carries `aria-busy="true"` and `aria-label` with the bookmark title. `ProcessingBookmark`
+  type exported separately for Task 7 to consume.
+
+  **Shimmer animation:** `@keyframes shimmer` (background-position sweep -200% → 200%) +
+  `.animate-shimmer` in `@layer utilities` (linear-gradient using `--line`/`--surface-elevated`
+  tokens — works in both light and dark mode automatically). 1.6s `ease-in-out` per §16's "calm
+  thinking" instruction. Reduced-motion: `animation: none; background: var(--line)` — bar still
+  renders at resting color, no motion.
+
+  **`ProcessingCard` not yet wired into `BookmarkList.jsx`:** the visual components are ready;
+  the wiring (Task 7's job) is when `AddBookmarkForm` calls `addBookmark` with a processing-shaped
+  object and then swaps it with the real card once the server responds. `BookmarkList.jsx`'s
+  `addBookmark` imperative handle is deliberately left unchanged — it already accepts any object
+  into the `bookmarks` array; Task 7 will manage the processing/real distinction at the form level.
+
+  **Decision — `ProcessingCard` in its own file (`ProcessingCard.tsx`):** user's preference;
+  overrode the co-location argument (ProcessingCard and BookmarkCardSkeleton are tightly coupled
+  as "non-real card states") in favor of navigability (one component per file is the dominant
+  React convention and easier for beginners to find). The coupling argument wasn't strong enough
+  to insist.
+
+  **Verified via real tool runs:** `npx tsc -b --noEmit` (clean, exit 0), `npx vite build`
+  (clean, exit 0, 731ms). Confirmed in compiled CSS: `@keyframes shimmer` (correct from/to
+  keyframes), `.animate-shimmer` with linear-gradient and `1.6s ease-in-out infinite shimmer`,
+  reduced-motion override (`background: var(--line); animation: none`) — all present in the
+  production bundle.
+
+  - **Task 7 — Bookmark Creation Flow Redesign:** Rebuilt `AddBookmarkForm.jsx` → `AddBookmarkForm.tsx`
+  using Task 2's `Input`/`Textarea`/`Button` primitives. URL field first with `sizeVariant="lg"`
+  (h-12, Body Large) separated from secondary fields (title, note, tags, collection) by a
+  `gap-8` break and a soft divider line. Submit button is `Button` `primary` `loading={isLoading}`
+  (Sparkles pulse during AI processing). `lastResult` preview block removed — the `ProcessingCard`
+  in the list is the feedback now.
+
+  **Processing→real card swap wiring:**
+  - `AddBookmarkForm` calls `onProcessing(processingBookmark)` immediately on submit (before API)
+    so the caller can prepend a `<ProcessingCard>` optimistically.
+  - `AddBookmarkForm` calls `onCreated({ ...bookmark, _tempId, _animateGist: true })` when the
+    API responds, so the caller can swap the ProcessingCard for a real `BookmarkCard`.
+  - `BookmarkList.jsx` gained a `replaceBookmark(tempId, real)` imperative handle method and a
+    runtime `bookmark._processing` check in its map to render `<ProcessingCard>` vs `<BookmarkCard>`.
+  - `BookmarkCard.tsx` gained an `animateGist?: boolean` prop forwarded to `<Gist animate>`—
+    this is where Task 5's entrance animation finally fires for the first time.
+  - `Home.tsx` wires the two callbacks to the imperative handle; `BookmarkListHandle` type
+    tightened from `addBookmark: (bookmark: unknown)` to proper `ProcessingBookmark`/`Bookmark`
+    shapes with the client-side-only fields.
+  - `ProcessingCard.tsx`'s `ProcessingBookmark` type updated to include `_processing: true`
+    as a required discriminant field.
+
+  **Functional contracts preserved:**
+  - `err.status === 429` → rate-limit toast unchanged.
+  - Client-side "url or note required" guard still runs before any API call.
+  - No-refetch in-place state update: `addBookmark` + `replaceBookmark` on the imperative handle,
+    no `fetchPage` called.
+  - `summary: null` fail-soft: if AI fails, the ProcessingCard is still replaced with a real
+    `BookmarkCard` — it just renders without a Gist block. No error state.
+
+  **API failure handling decision:** on API failure, a toast fires but the `ProcessingCard` stays
+  in the list (stuck, no resolution). This is a known gap noted in the code comment — Task 14
+  (Error States) can revisit with a proper error card treatment. The simplest fix would be
+  calling `replaceBookmark` with `null` to remove it, but that would require `BookmarkList` to
+  handle a null slot, which is out of Task 7's scope.
+
+  **`AddBookmarkForm.jsx` kept alongside `.tsx`:** the old `.jsx` file was not deleted since
+  nothing in the current import graph references it by name (all imports went through bare
+  `'./AddBookmarkForm'` which Vite resolves to `.tsx` first). Flagging: the `.jsx` file should
+  be deleted to avoid confusion. Can be done with a one-liner at the next git commit.
+
+  **Collection reminder:** user flagged they may want to remove collections from the backend
+  entirely after the redesign is complete, since tags may be sufficient. Noted here to revisit
+  after Task 20 (Final QA Pass). Do not remove until that decision is made — Task 15
+  (Collections UI) is still planned and would make the decision easier to evaluate with a
+  working UI.
+
+  **Verified:** `npx tsc -b --noEmit` (clean, exit 0), `npx vite build` (clean, exit 0, 572ms).
+
 ## Immediate Next Task
-Task 6 — Loading States (Skeletons + Processing Card). Build `BookmarkCardSkeleton.tsx` (new —
-same outer shape as a real card, muted placeholder bars for title/gist/tags, subtle shimmer sweep)
-and the "processing" card variant for `BookmarkList.jsx` — a card with the real title/domain
-rendered as soon as known, a pulsing Gist-mark placeholder in place of the summary, and a
-Micro-size label like "Reading the page and forming a gist…". The shimmer/pulse resolves into the
-real Gist via Task 5's entrance animation (this is the "small transformation" moment §16 describes).
+Task 8 — Edit Modal Redesign + Accessibility Fix. Rebuild `EditBookmarkModal.jsx` → `.tsx`:
+focus trap, Escape-to-close, ARIA dialog attributes, shared form-field styling with Task 7's form.
+Current modal has zero accessibility: no focus trap, no Escape key, no `role="dialog"`. This is
+a firm requirement from §18/§22 — a keyboard-only user currently cannot use this modal at all.
 
 ## Key Decisions
 - **TypeScript migration strategy:** Incremental, file-by-file, as each component is redesigned

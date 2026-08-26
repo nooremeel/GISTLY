@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { apiClient } from '../api/client';
 import BookmarkList from '../components/BookmarkList';
 import AddBookmarkForm from '../components/AddBookmarkForm';
+import type { Bookmark } from '../types/bookmark';
+import type { ProcessingBookmark } from '../components/ProcessingCard';
 
 interface HealthStatus {
   status: string;
@@ -9,7 +11,8 @@ interface HealthStatus {
 }
 
 interface BookmarkListHandle {
-  addBookmark: (bookmark: unknown) => void;
+  addBookmark: (bookmark: ProcessingBookmark) => void;
+  replaceBookmark: (tempId: string, real: Bookmark & { _animateGist?: boolean }) => void;
 }
 
 export default function Home() {
@@ -30,9 +33,14 @@ export default function Home() {
         <h1 className="text-h1">Your library</h1>
       </div>
 
-      { }
       <section id="add-bookmark" aria-label="Add a bookmark">
-        <AddBookmarkForm onCreated={(b: unknown) => bookmarkListRef.current?.addBookmark(b)} />
+        <AddBookmarkForm
+          onProcessing={(p) => bookmarkListRef.current?.addBookmark(p)}
+          onCreated={(b) => {
+            const { _tempId, ...realBookmark } = b;
+            bookmarkListRef.current?.replaceBookmark(_tempId, realBookmark);
+          }}
+        />
       </section>
 
       <BookmarkList ref={bookmarkListRef} />

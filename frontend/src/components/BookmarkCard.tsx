@@ -14,6 +14,11 @@ export interface BookmarkCardProps {
   bookmark: Bookmark;
   onUpdate: (updated: Bookmark) => void;
   onDelete: (deletedId: string) => void;
+  /** When `true`, the Gist block enters with the fade+expand animation
+   *  (Task 5's `animate-gist-enter`). Set by `BookmarkList` when it
+   *  swaps a `ProcessingCard` for the real card — this is the moment
+   *  the entrance animation is meant to fire (design system §11/§16). */
+  animateGist?: boolean;
 }
 
 // Card shows at most this many tags before collapsing the rest into a
@@ -97,7 +102,7 @@ type ShowToast = (message: string, type?: 'success' | 'error' | 'info', duration
  * Flow) will pass `animate` for freshly created bookmarks where the Gist
  * streams in after the processing state resolves.
  */
-export default function BookmarkCard({ bookmark, onUpdate, onDelete }: BookmarkCardProps) {
+export default function BookmarkCard({ bookmark, onUpdate, onDelete, animateGist = false }: BookmarkCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const { showToast } = useToast() as { showToast: ShowToast };
@@ -181,7 +186,7 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete }: BookmarkC
 
       <h3 className="mt-1 text-h3 font-semibold text-ink">{headline}</h3>
 
-      <Gist summary={bookmark.summary} />
+      <Gist summary={bookmark.summary} animate={animateGist} />
 
       {bookmark.note && <p className="mt-4 text-body text-muted">{bookmark.note}</p>}
 

@@ -2,6 +2,8 @@ import { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
 import { apiClient } from '../api/client';
 import { useToast } from '../context/ToastContext';
 import BookmarkCard from './BookmarkCard';
+import BookmarkCardSkeleton from './BookmarkCardSkeleton';
+import ProcessingCard from './ProcessingCard';
 import SearchBar from './SearchBar';
 import TagPills from './TagPills';
 
@@ -17,12 +19,23 @@ const BookmarkList = forwardRef(function BookmarkList(props, ref) {
   const [activeTag, setActiveTag] = useState(null);
   const { showToast } = useToast();
 
-  // Exposes an imperative API so AddBookmarkForm (Task 17), which is not a
-  // direct child of this component, can prepend a newly created bookmark
+  // Exposes an imperative API so AddBookmarkForm, which is not a
+  // direct child of this component, can manage bookmark state
   // without triggering a refetch — consistent with handleUpdate/handleDelete.
   useImperativeHandle(ref, () => ({
+    // Prepend a new item (real or processing) to the list.
     addBookmark: (newBookmark) => {
       setBookmarks((prev) => [newBookmark, ...prev]);
+    },
+    // Swap a ProcessingCard (identified by tempId) for the real bookmark.
+    // Called by AddBookmarkForm once the API responds.
+    // If the real bookmark has summary: null, the ProcessingCard is still
+    // replaced — the real card just renders without a Gist block
+    // (AI fail-soft contract, STATE.md).
+    replaceBookmark: (tempId, realBookmark) => {
+      setBookmarks((prev) =>
+        prev.map((b) => (b._id === tempId ? { ...realBookmark, _processing: false } : b))
+      );
     },
   }));
 
@@ -69,7 +82,22 @@ const BookmarkList = forwardRef(function BookmarkList(props, ref) {
     fetchPage(page + 1, { append: true });
   };
 
-  if (loading) return <p>Loading bookmarks...</p>;
+  // Initial load — show 3 skeleton cards instead of a bare loading text.
+  // The container carries aria-busy + aria-label so screen readers hear
+  // "Loading your bookmarks" once, rather than 3 meaningless skeleton
+  // cards (each skeleton is aria-hidden individually — see BookmarkCardSkeleton).
+  if (loading)
+    return (
+      <div
+        className="flex flex-col gap-8"
+        aria-busy="true"
+        aria-label="Loading your bookmarks"
+      >
+        <BookmarkCardSkeleton />
+        <BookmarkCardSkeleton />
+        <BookmarkCardSkeleton />
+      </div>
+    );
 
   if (bookmarks.length === 0) {
     return <p>No bookmarks yet.</p>;
@@ -92,9 +120,23 @@ const BookmarkList = forwardRef(function BookmarkList(props, ref) {
             <p>No bookmarks match your search or filter.</p>
           </div>
         )}
-        {filteredBookmarks.map((bookmark) => (
-          <BookmarkCard key={bookmark._id} bookmark={bookmark} onUpdate={handleUpdate} onDelete={handleDelete} />
-        ))}
+        {filteredBookmarks.map((bookmark) => {
+          // Processing items are added client-side by AddBookmarkForm before
+          // the API responds. They carry _processing: true (never set by the
+          // server) so we know to render ProcessingCard instead of BookmarkCard.
+          if (bookmark._processing) {
+            return <ProcessingCard key={bookmark._id} bookmark={bookmark} />;
+          }
+          return (
+            <BookmarkCard
+              key={bookmark._id}
+              bookmark={bookmark}
+              onUpdate={handleUpdate}
+              onDelete={handleDelete}
+              animateGist={bookmark._animateGist}
+            />
+          );
+        })}
       </div>
 
       {page < pages && (
