@@ -19,7 +19,7 @@ touch remote tracking/PR state outside this task's scope — but flagging so fut
 right branch name and don't assume a second, different branch exists.
 
 ## Current Task
-Task 5 — AI Gist Component
+Task 6 — Loading States (Skeletons + Processing Card)
 
 ## Completed Tasks
 - **Part A — Preparation:** Cloned repo, created `feature/design-system-migration` branch off `main`.
@@ -318,12 +318,58 @@ Task 5 — AI Gist Component
   `src/smoke-main.tsx`) were temporary and deleted after verification — not part of the
   actual deliverable.
 
+  - **Task 5 — AI Gist Component:** Extracted the inline Gist block from `BookmarkCard.tsx` into
+  its own `frontend/src/components/Gist.tsx` (new), and wired `BookmarkCard.tsx` to import and
+  render `<Gist summary={bookmark.summary} />` in place of the former inline JSX.
+
+  **`Gist.tsx` API:**
+  ```ts
+  summary: string | null | undefined;  // renders nothing when null/undefined/empty — fail-soft contract
+  animate?: boolean;                    // default false; set true for freshly created bookmarks (Task 7)
+  className?: string;                   // forwarded to the outer div for one-off layout tweaks
+  ```
+
+  **Entrance animation:** `@keyframes gist-enter` added to `index.css` (fade: opacity 0→1,
+  expand: max-height 0→600px, padding-top/bottom 0→1rem) in a plain `@keyframes` block
+  (outside any layer — keyframes don't participate in the cascade-layers system). The
+  `.animate-gist-enter` class emitting `animation: gist-enter 300ms cubic-bezier(0.22, 1, 0.36, 1)
+  both` plus `overflow: hidden` is placed in `@layer utilities` so it sits at the same cascade-
+  layer priority as Tailwind's own utilities and doesn't need specificity tricks to coexist with
+  them. The reduced-motion override (`@media (prefers-reduced-motion: reduce) { .animate-gist-enter
+  { animation: none } }`) is inside the same `@layer utilities` block — the block still *appears*
+  at its final opacity/height instantly; the state change is never removed, per §21's requirement.
+
+  **Implementation note — `animate` prop is not yet wired up:** `BookmarkCard` passes no `animate`
+  prop (correctly — listed bookmarks have summaries already loaded; no entrance animation should
+  play). The prop exists and is documented for Task 7 (Bookmark Creation Flow), which will
+  optimistically insert a processing card into the list and then flip it to a real `BookmarkCard`
+  with `<Gist animate>` once the AI summary arrives. This task correctly scopes only the
+  extraction + animation infrastructure, not the Task 7 wiring.
+
+  **`BookmarkCard.tsx` changes:** removed the inline Gist JSX block (9 lines → 1 line);
+  removed the now-unused `Sparkles` import; added `import Gist from './Gist'`; updated the
+  JSDoc comment to reflect the extraction.
+
+  **No new dependencies, no new design tokens:** the `@keyframes` uses the exact
+  `cubic-bezier(0.22, 1, 0.36, 1)` value from §21 written literally in the keyframe (no new token;
+  a `@property` approach was attempted and immediately reverted — `@property` applies to typed CSS
+  custom properties like lengths/colors, not to string aliases for easing curves; the literal value
+  is the correct approach here, consistent with how `--shadow-sm`/etc. work). The max-height
+  approach for the height animation is the standard CSS workaround for the `height: auto`
+  un-transitionability; 600px is a safe upper bound for any realistic Gist summary.
+
+  **Verified via real tool runs:** `npx tsc -b --noEmit` (clean, exit 0), `npx vite build` (clean,
+  exit 0, 806ms). Confirmed the compiled CSS contains: `@keyframes gist-enter` (correct from/to
+  keyframes), `.animate-gist-enter` with the correct `animation:` shorthand, and the
+  `prefers-reduced-motion` override — all present in the production bundle.
+
 ## Immediate Next Task
-Task 5 — AI Gist Component. Extract the Gist block built inline in Task 4's `BookmarkCard.tsx`
-into its own `frontend/src/components/Gist.tsx`: same label/container/text treatment already
-shipped, plus the §11 entrance animation (fade + expand from 0 to full height, ~300ms) for
-when a summary streams in after bookmark creation. Must preserve the `summary: null` fail-soft
-contract — omit the block entirely, never render an empty/error state for it.
+Task 6 — Loading States (Skeletons + Processing Card). Build `BookmarkCardSkeleton.tsx` (new —
+same outer shape as a real card, muted placeholder bars for title/gist/tags, subtle shimmer sweep)
+and the "processing" card variant for `BookmarkList.jsx` — a card with the real title/domain
+rendered as soon as known, a pulsing Gist-mark placeholder in place of the summary, and a
+Micro-size label like "Reading the page and forming a gist…". The shimmer/pulse resolves into the
+real Gist via Task 5's entrance animation (this is the "small transformation" moment §16 describes).
 
 ## Key Decisions
 - **TypeScript migration strategy:** Incremental, file-by-file, as each component is redesigned

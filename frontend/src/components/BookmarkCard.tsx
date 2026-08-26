@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Pencil, Sparkles, Trash2 } from 'lucide-react';
+import { Pencil, Trash2 } from 'lucide-react';
 import { apiClient } from '../api/client';
 import { useToast } from '../context/ToastContext';
 import { cx } from '../lib/cx';
 import { Button } from './Button';
 import { Tag } from './Tag';
 import { Badge } from './Badge';
+import Gist from './Gist';
 import EditBookmarkModal from './EditBookmarkModal';
 import type { Bookmark } from '../types/bookmark';
 
@@ -90,10 +91,11 @@ type ShowToast = (message: string, type?: 'success' | 'error' | 'info', duration
  * Bookmark card (design system §10). The product's core surface — see
  * `gistly-design-system.md` §10/§11/§12 for the full spec this implements.
  *
- * The Gist block (§11) is rendered inline here rather than as its own
- * component; Task 5 ("AI Gist Component") is explicitly scoped to extract
- * it into `Gist.tsx` and add the entrance animation, so this is the
- * expected intermediate state, not a shortcut.
+ * The Gist block (§11) is rendered via the extracted `Gist` component
+ * (Task 5). No `animate` prop is set here — summaries in the list are
+ * already loaded, so they appear instantly. Task 7 (Bookmark Creation
+ * Flow) will pass `animate` for freshly created bookmarks where the Gist
+ * streams in after the processing state resolves.
  */
 export default function BookmarkCard({ bookmark, onUpdate, onDelete }: BookmarkCardProps) {
   const [isEditing, setIsEditing] = useState(false);
@@ -179,15 +181,7 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete }: BookmarkC
 
       <h3 className="mt-1 text-h3 font-semibold text-ink">{headline}</h3>
 
-      {bookmark.summary && (
-        <div className="mt-4 rounded-md bg-lime-wash p-4">
-          <div className="mb-1 flex items-center gap-1">
-            <Sparkles className="size-3 text-accent" aria-hidden="true" />
-            <span className="text-micro font-medium uppercase text-accent">Gist</span>
-          </div>
-          <p className="text-body text-ink">{bookmark.summary}</p>
-        </div>
-      )}
+      <Gist summary={bookmark.summary} />
 
       {bookmark.note && <p className="mt-4 text-body text-muted">{bookmark.note}</p>}
 

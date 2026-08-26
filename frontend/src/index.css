@@ -326,3 +326,52 @@ code {
     opacity: 0.6;
   }
 }
+
+/*
+  Gist entrance animation (design system §11 / Task 5).
+  Fade + expand from 0 height, ~300ms, design-system easing.
+
+  Why @layer utilities: Tailwind v4 puts its own utilities in this layer;
+  placing custom animation helpers here keeps the same cascade-layer
+  priority so a consumer can safely combine .animate-gist-enter with any
+  Tailwind utility class without specificity surprises.
+
+  prefers-reduced-motion: the animation class produces no visible motion
+  when the user has requested reduced motion — the block still *appears*
+  (opacity/height resolve to their final values) but does so instantly
+  rather than over 300ms, per §21's requirement: "instant state change
+  rather than removing the state change altogether."
+
+  Implementation note on max-height approach: CSS cannot transition
+  height: auto, so we animate max-height from 0 to a generous upper bound
+  (600px — much larger than any realistic Gist summary) so the animation
+  reads as a smooth expand. The overflow: hidden on the element prevents
+  the content from painting outside the clamped max-height mid-animation.
+*/
+@keyframes gist-enter {
+  from {
+    opacity: 0;
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 600px;
+    padding-top: 1rem;   /* matches the p-4 the Gist container carries */
+    padding-bottom: 1rem;
+  }
+}
+
+@layer utilities {
+  .animate-gist-enter {
+    animation: gist-enter 300ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    overflow: hidden;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-gist-enter {
+      animation: none;
+    }
+  }
+}
