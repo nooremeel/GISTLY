@@ -7,11 +7,6 @@ import { Button } from './Button';
 import type { Bookmark } from '../types/bookmark';
 import type { ProcessingBookmark } from './ProcessingCard';
 
-/**
- * `useToast()` type workaround — same cast as BookmarkCard.tsx.
- * The real fix lives in Task 9 (Toast System Redesign).
- */
-type ShowToast = (message: string, type?: 'success' | 'error' | 'info', duration?: number) => void;
 
 /** Extracts the error status from an unknown catch binding,
  *  matching the apiClient's `err.status` convention. */
@@ -73,7 +68,7 @@ export interface AddBookmarkFormProps {
 export default function AddBookmarkForm({ onProcessing, onCreated }: AddBookmarkFormProps) {
   const [form, setForm] = useState(initialForm);
   const [isLoading, setIsLoading] = useState(false);
-  const { showToast } = useToast() as { showToast: ShowToast };
+  const { showToast } = useToast();
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>

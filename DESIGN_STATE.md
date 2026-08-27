@@ -19,7 +19,7 @@ touch remote tracking/PR state outside this task's scope — but flagging so fut
 right branch name and don't assume a second, different branch exists.
 
 ## Current Task
-Task 8 — Edit Modal Redesign + Accessibility Fix
+Task 10 — Bookmark List + Filtering Fixes
 
 ## Completed Tasks
 - **Part A — Preparation:** Cloned repo, created `feature/design-system-migration` branch off `main`.
@@ -461,11 +461,130 @@ Task 8 — Edit Modal Redesign + Accessibility Fix
 
   **Verified:** `npx tsc -b --noEmit` (clean, exit 0), `npx vite build` (clean, exit 0, 572ms).
 
+  - **Task 8 — Edit Modal Redesign + Accessibility Fix:** Rebuilt
+  `EditBookmarkModal.jsx` → `.tsx` (new file alongside the old `.jsx`—see
+  deviation note below). Full §18/§22 accessibility pass: focus trap
+  (Tab/Shift+Tab trapped within the panel via `document.addEventListener`
+  on mount/unmount cycle), Escape-to-close (same pattern), scrim
+  click-to-close, `role="dialog"` + `aria-modal="true"` +
+  `aria-labelledby` tying the heading to the dialog role. Focus moves to
+  the first focusable field on open; returns to the triggering Edit button
+  on close via the new `triggerRef` prop.
+
+  **Portal rendering (blocking fix):** rendered via
+  `ReactDOM.createPortal` to `document.body`. This is required — not a
+  preference — because bookmark cards use CSS `transform` on hover, which
+  creates a new CSS containing block for `position: fixed` children; any
+  `fixed`-position overlay rendered *inside* the card article would be
+  clipped to the card's own bounds rather than the viewport. Portalling
+  out sidesteps the containing-block issue entirely without fighting
+  z-index stacking contexts.
+
+  **Form fields:** all five fields (Title, URL, Note, Tags, Collection)
+  use Task 2's `Input`/`Textarea` primitives. Same `gap-4` vertical
+  rhythm as `AddBookmarkForm`'s secondary fields. Footer uses Task 2's
+  `Button` (Secondary "Cancel" + Primary "Save") right-aligned per §18.
+
+  **Save is non-AI → disabled + text swap, not `loading` prop:** §16
+  explicitly distinguishes AI-triggering actions (Add Bookmark, which gets
+  the pulsing Gist-mark pulse via `loading={true}`) from non-AI actions
+  (Save edit, Login, Delete, which get plain `disabled` + swapped
+  `children`). Save is in the second category — matching the original
+  file's own `'Saving…'` text swap.
+
+  **Entrance animation:** two new `@keyframes` in `index.css`:
+  `modal-scrim-enter` (opacity 0→1) and `modal-panel-enter` (opacity +
+  scale 0.96→1), both 200ms, design-system easing
+  (`cubic-bezier(0.22, 1, 0.36, 1)`). Applied via `.animate-modal-scrim`
+  and `.animate-modal-panel` utility classes in `@layer utilities`
+  (same pattern as `.animate-gist-enter`/`.animate-shimmer`). Both have
+  `prefers-reduced-motion: reduce` overrides in the same layer block:
+  `animation: none` — state still resolves to final values, only motion
+  is removed, per §21.
+
+  **`BookmarkCard.tsx` updated:** added `useRef<HTMLButtonElement>` for
+  the Edit button (`editBtnRef`) and passed it as `triggerRef` to
+  `EditBookmarkModal`. `Button` already uses `forwardRef` (Task 2), so
+  this required only adding `ref={editBtnRef}` to the Edit `<Button>`.
+
+  **`index.css` comment updated:** removed `EditBookmarkModal` from the
+  temporary placeholder block's "remaining unmigrated" list; it's now
+  migrated. Remaining: Login, Register, SearchBar.
+
+  **Deviation — `.jsx` file left alongside `.tsx`:** same as
+  `AddBookmarkForm`'s Task 7 deviation (the old `.jsx` was not deleted;
+  Vite resolves the bare `'./EditBookmarkModal'` import to `.tsx` first).
+  Flagging: delete `EditBookmarkModal.jsx` at the next git commit to
+  avoid confusion — a one-liner cleanup, not a separate task.
+
+  **`useToast()` cast:** same scoped `as { showToast: ShowToast }` cast
+  as `BookmarkCard.tsx`/`AddBookmarkForm.tsx`. Task 9 (Toast System
+  Redesign) is the file that owns the real fix.
+
+  **Verified:** `npx tsc -b --noEmit` (clean, exit 0), `npx vite build`
+  (clean, exit 0, 784ms). Confirmed in compiled CSS: `@keyframes
+  modal-scrim-enter` + `modal-panel-enter` (correct from/to keyframes),
+  `.animate-modal-scrim` + `.animate-modal-panel` with the correct
+  `animation:` shorthands, and the `prefers-reduced-motion` override for
+  both — all present in the production bundle.
+
+  - **Task 9 — Toast System Redesign:** Rebuilt `Toast.jsx` → `.tsx` and
+  `ToastContext.jsx` → `.tsx`. Both old `.jsx` files deleted post-migration.
+
+  **`ToastContext.tsx` — typing fix (primary goal):** replaced
+  `createContext(null)` with `createContext<ToastContextValue>(defaultValue)`
+  where `defaultValue` has stub functions that throw in dev if called outside
+  a provider. This makes `useToast()` return `ToastContextValue` instead of
+  narrowing to `never`, which was the root cause of the local `as { showToast:
+  ShowToast }` cast in BookmarkCard, AddBookmarkForm, and EditBookmarkModal.
+  All three casts removed; those files now call `useToast()` directly without
+  any cast. Exported `ToastType`, `Toast` (interface), and `ToastContextValue`
+  as named types so future consumers don't need to re-declare them locally.
+  The `duration` field is now part of the `Toast` interface (was ignored before)
+  so the `ToastItem` component can use it for its own auto-dismiss timer.
+
+  **`Toast.tsx` — visual redesign (§19):**
+  - **Surface + left-accent-bar:** `--color-surface` background + a 4px
+    `border-l` in the type colour (`border-l-lime` for success, `border-l-coral`
+    for error, `border-l-accent` for info) — §19's recommended "Ink background
+    + left-accent-bar" treatment. Type colour appears only as the border accent,
+    never as text or background fill, which sidesteps the Lime-on-light-surface
+    contrast risk §22 flags.
+  - **Type glyph:** `✓` / `✕` / `ℹ` renders before the message text (small,
+    muted, `aria-hidden`) so type is signalled by both colour AND icon, never
+    colour alone (§22).
+  - **Entrance animation:** slide from right (`translateX 110%→0`) + fade,
+    200ms, design-system easing — §19 "slide-in from the right + fade".
+  - **Exit animation:** fade + scale 0.95, 150ms — §19 "fade + slight
+    scale-down on dismiss". `ToastItem` component manages its own `dismissing`
+    state: triggers the exit animation ~150ms before the context's
+    `setTimeout` fires, so the animation plays fully before the DOM node
+    disappears. Both directions confirmed in the production CSS bundle.
+  - **`aria-live` region (§22 firm requirement):** `role="status"` +
+    `aria-live="polite"` on success/info toasts; `aria-live="assertive"` on
+    error toasts. The container is always mounted (even with zero toasts) so
+    the live region exists in the DOM before announcements fire — mounting
+    conditionally on `toasts.length > 0` would miss the first toast.
+  - **z-index 60:** sits above the modal scrim (z-50) so toasts remain
+    readable while a modal is open.
+  - **Click-to-dismiss preserved** from the original implementation.
+  - **`prefers-reduced-motion`:** both `animate-toast-in` and
+    `animate-toast-out` have `animation: none` overrides in the same
+    `@layer utilities` block; elements still appear/disappear, only motion
+    is removed, per §21.
+
+  **Verified:** `npx tsc -b --noEmit` (clean, exit 0), `npx vite build`
+  (clean, exit 0, 609ms). Confirmed in compiled CSS: `@keyframes toast-in`
+  + `toast-out` (correct from/to keyframes), `.animate-toast-in` +
+  `.animate-toast-out` with correct `animation:` shorthands, and the
+  `prefers-reduced-motion` override — all present in the production bundle.
+
 ## Immediate Next Task
-Task 8 — Edit Modal Redesign + Accessibility Fix. Rebuild `EditBookmarkModal.jsx` → `.tsx`:
-focus trap, Escape-to-close, ARIA dialog attributes, shared form-field styling with Task 7's form.
-Current modal has zero accessibility: no focus trap, no Escape key, no `role="dialog"`. This is
-a firm requirement from §18/§22 — a keyboard-only user currently cannot use this modal at all.
+Task 10 — Bookmark List + Filtering Fixes. Rebuild `BookmarkList.jsx` → `.tsx`
+layout, convert `SearchBar.jsx` to use Task 2's `Input` primitive, and fix the
+data-flow bug where search/tag filtering only operates on the currently-loaded
+page instead of the full dataset (depends on Task 11's backend endpoint for the
+full fix, but layout work can start now).
 
 ## Key Decisions
 - **TypeScript migration strategy:** Incremental, file-by-file, as each component is redesigned
@@ -587,7 +706,3 @@ Task 5 (Gist "processed" state) and Task 14 (error states) to reuse rather than 
 - Heading/body responsive behavior at the 1024px breakpoint was simplified to "no shrink" rather
   than carrying forward the old scale's tablet step — worth a visual check once the app actually
   renders at that width, not just a spec read (Task 1).
-  - `useToast()` in `context/ToastContext.jsx` type-resolves to `never` under `strict` TS
-  (`createContext(null)` + its throw-guard narrows away the only type). Worked around locally
-  in `BookmarkCard.tsx` via a scoped cast; the real fix (giving the context a proper typed
-  value/non-null default) belongs to Task 9 (Toast System Redesign) (Task 4).

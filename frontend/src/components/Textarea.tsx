@@ -24,7 +24,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
   const errorId = error ? `${textareaId}-error` : undefined;
 
   return (
-    <div className={wrapperClassName}>
+    <div className={cx('w-full', wrapperClassName)}>
       {label && (
         <label htmlFor={textareaId} className={fieldLabel}>
           {label}
@@ -34,7 +34,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
         ref={ref}
         id={textareaId}
         rows={rows}
-        className={cx(fieldBase, 'py-3 px-4 text-body resize-y', error && fieldError, className)}
+        className={cx(fieldBase, 'block py-3 px-4 text-body resize-y', error && fieldError, className)}
         aria-invalid={error ? true : undefined}
         aria-describedby={errorId}
         {...rest}

@@ -268,7 +268,7 @@ code {
 
 /*
   TEMPORARY placeholder styling for plain <input>/<textarea>/<button>/<select>
-  elements across the app (Login, Register, AddBookmarkForm, EditBookmarkModal,
+  elements across the app (Login, Register, AddBookmarkForm,
   SearchBar, etc). None of these elements have CSS classes on them yet — they
   relied entirely on the browser's built-in default appearance (a border, a
   background, some padding). Tailwind's Preflight reset intentionally strips
@@ -279,9 +279,10 @@ code {
   CSS variables as the rest of the app, so forms are usable in the meantime.
   DELETE this block once every raw input/textarea/select/button in the app has
   been migrated to the real Button.tsx/Input.tsx/Textarea.tsx primitives
-  (Task 2 shipped the primitives themselves; forms still using raw elements —
-  AddBookmarkForm, EditBookmarkModal, Login, Register, SearchBar — get wired
-  up in their own later tasks, so this stays in place until then).
+  (Task 2 shipped the primitives themselves; AddBookmarkForm was migrated in
+  Task 7, EditBookmarkModal in Task 8; remaining unmigrated forms — Login,
+  Register, SearchBar — get wired up in their own later tasks, so this stays
+  in place until then).
 
   FIX (Task 2, cascade-layers bug): this block must live inside `@layer base`.
   Tailwind v4 emits all of its utility classes inside CSS cascade layers
@@ -328,7 +329,118 @@ code {
 }
 
 /*
+  Modal entrance animations (design system §18 / §21 / Task 8).
+
+  Two animations coordinate on modal open:
+    - `modal-scrim`: the ink overlay fades from 0 to its target opacity (~200ms).
+    - `modal-panel`: the surface panel scales 0.96→1 and fades in (~200ms).
+
+  Why this timing:
+    - §18: "scrim fades in slightly faster" — scrim is instant-ish vs panel's
+      simultaneous 200ms; both use the same duration but the scale gives the
+      panel a brief illusion of arriving after the scrim.
+    - §21: 200–300ms range for "component transitions"; 200ms here since the
+      modal is an interstitial layer, not a page-level transition.
+    - Easing: `cubic-bezier(0.22, 1, 0.36, 1)` throughout (§21).
+
+  prefers-reduced-motion: state change is NOT removed — the modal still
+  appears, opacity still resolves to 1, scale still resolves to 1. Only the
+  motion is removed (animation: none), per §21's "instant state change rather
+  than removing the state change altogether" requirement.
+*/
+@keyframes modal-scrim-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modal-panel-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@layer utilities {
+  .animate-modal-scrim {
+    animation: modal-scrim-enter 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .animate-modal-panel {
+    animation: modal-panel-enter 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-modal-scrim,
+    .animate-modal-panel {
+      animation: none;
+    }
+  }
+}
+
+/*
+  Toast entrance + exit animations (design system §19 / §21 / Task 9).
+
+  in:  slide from right (translateX 110%→0) + fade, 200ms — §19 "slide-in from
+       the right + fade". 110% (not 100%) ensures the shadow doesn't bleed into
+       the viewport edge mid-animation.
+  out: fade + slight scale-down (1→0.95), 150ms — §19 "fade + slight scale-down
+       on dismiss". Shorter than in so the disappearance feels snappier.
+
+  Both use the design system's easing curve (§21: cubic-bezier(0.22, 1, 0.36, 1)).
+
+  prefers-reduced-motion: animation: none, per §21's "instant state change"
+  requirement — element still appears/disappears, just without motion.
+*/
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(110%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes toast-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+@layer utilities {
+  .animate-toast-in {
+    animation: toast-in 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .animate-toast-out {
+    animation: toast-out 150ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-toast-in,
+    .animate-toast-out {
+      animation: none;
+    }
+  }
+}
+
+/*
   Gist entrance animation (design system §11 / Task 5).
+
   Fade + expand from 0 height, ~300ms, design-system easing.
 
   Why @layer utilities: Tailwind v4 puts its own utilities in this layer;

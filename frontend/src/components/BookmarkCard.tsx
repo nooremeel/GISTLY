@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Pencil, Trash2 } from 'lucide-react';
 import { apiClient } from '../api/client';
 import { useToast } from '../context/ToastContext';
@@ -81,16 +81,6 @@ function getErrorMessage(err: unknown, fallback: string): string {
   return err instanceof Error && err.message ? err.message : fallback;
 }
 
-/**
- * `useToast()` (`context/ToastContext.jsx`) is still untyped JS —
- * `createContext(null)` plus its `if (!ctx) throw ...; return ctx;` guard
- * makes TS narrow the return type to `never` for any consumer, which
- * breaks under `strict` the moment `showToast` is called. That's a
- * pre-existing gap in a file Task 9 ("Toast System Redesign") owns, not
- * something to fix here — this is a narrow, local cast scoped to this
- * file only, matching `showToast`'s actual runtime signature.
- */
-type ShowToast = (message: string, type?: 'success' | 'error' | 'info', duration?: number) => void;
 
 /**
  * Bookmark card (design system §10). The product's core surface — see
@@ -105,7 +95,12 @@ type ShowToast = (message: string, type?: 'success' | 'error' | 'info', duration
 export default function BookmarkCard({ bookmark, onUpdate, onDelete, animateGist = false }: BookmarkCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const { showToast } = useToast() as { showToast: ShowToast };
+  const { showToast } = useToast();
+  /**
+   * Ref for the Edit button — passed as `triggerRef` to EditBookmarkModal
+   * so focus returns here when the modal closes (§18 / §22 requirement).
+   */
+  const editBtnRef = useRef<HTMLButtonElement>(null);
 
   const handleDelete = async () => {
     if (!window.confirm('Delete this bookmark? This cannot be undone.')) return;
@@ -163,6 +158,7 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, animateGist
           )}
         >
           <Button
+            ref={editBtnRef}
             variant="ghost"
             size="compact"
             aria-label="Edit bookmark"
@@ -212,6 +208,7 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, animateGist
             onUpdate(updated);
             setIsEditing(false);
           }}
+          triggerRef={editBtnRef}
         />
       )}
     </article>

@@ -39,7 +39,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   const errorId = error ? `${inputId}-error` : undefined;
 
   return (
-    <div className={wrapperClassName}>
+    <div className={cx('w-full', wrapperClassName)}>
       {label && (
         <label htmlFor={inputId} className={fieldLabel}>
           {label}
