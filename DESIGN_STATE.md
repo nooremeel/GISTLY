@@ -19,7 +19,7 @@ touch remote tracking/PR state outside this task's scope — but flagging so fut
 right branch name and don't assume a second, different branch exists.
 
 ## Current Task
-Task 10 — Bookmark List + Filtering Fixes
+Task 15 — Collections UI
 
 ## Completed Tasks
 - **Part A — Preparation:** Cloned repo, created `feature/design-system-migration` branch off `main`.
@@ -579,12 +579,54 @@ Task 10 — Bookmark List + Filtering Fixes
   `.animate-toast-out` with correct `animation:` shorthands, and the
   `prefers-reduced-motion` override — all present in the production bundle.
 
+  - **Task 10 — Bookmark List + Filtering Fixes:** Migrated `BookmarkList.jsx`, `SearchBar.jsx`, and `TagPills.jsx` to `.tsx`.
+    - **`SearchBar.tsx`**: Wired up Task 2's `Input` primitive with the leading search icon (`<Search className="size-4" />`), fulfilling §8's exception rule for search fields.
+    - **`TagPills.tsx`**: Implemented design tokens for filter pills. `bg-accent-subtle text-accent` for inactive, `bg-ink text-paper` for active. Added `aria-pressed` for screen readers.
+    - **`BookmarkList.tsx`**: Added correct generic typing `forwardRef<BookmarkListHandle, {}>` to resolve the `ref` prop issue. Integrated the skeleton loaders and zero-data empty states (for both "Your library is empty" and "No bookmarks match your search"). Added a `Button` component for "Load more".
+    - **Filtering Bug / Architecture Note:** The existing implementation uses a client-side filter (`filteredBookmarks`) over the locally loaded paginated data. This limits search/tag filtering to the current page. The fix is deferred to Task 11, which will add a `?search=` param to the backend, turning the client-side filter into a debounced API request. The client-side filter is retained temporarily to preserve UI functionality until Task 11 lands.
+
+  - **Task 11 — Backend Search Endpoint:** 
+    - **Backend:** Added `search` query parameter support in `getBookmarks` controller using an `$or` regex match across `title`, `note`, and `url`. Pagination and user scoping are correctly preserved.
+    - **Frontend:** Updated `BookmarkList.tsx` to handle the new `?search=` parameter. Removed the client-side search filtering and implemented a debounced `useEffect` for `searchTerm` changes (300ms debounce while typing, instant for initial load or clear).
+
+  - **Task 12 — Search Overlay (Command-K):**
+    - Built a global `SearchOverlay.tsx` component that mounts via portal, implementing a ⌘K (Ctrl+K on Windows) pattern for searching the entire library.
+    - **Data Flow Fix:** To avoid duplicate search bars and UI clutter, the redundant `SearchBar` component was removed entirely from `BookmarkList.tsx`. The API data flow (the debounced `searchTerm` fetching) was moved up into `SearchOverlay`, making it the single source of truth for global search.
+    - **Accessibility:** The overlay uses the established `FOCUSABLE_SELECTORS` trap pattern, trapping Tab/Shift+Tab and supporting Escape to close, returning focus back to the triggering field.
+    - **Animations:** Used the design system's default 200–300ms easing curves with full `prefers-reduced-motion` fallbacks in `index.css`.
+    - **User Clarification (Deviation):** The user clarified they are on Windows and use Ctrl+K, so the shortcut handling natively binds `Ctrl+K` instead of just Cmd+K.
+
+  - **Task 13 — Empty States:**
+    - Replaced the generic placeholder strings across the app with a centralized `<EmptyState />` component.
+    - **Typography:** Uses the premium `Fraunces` display serif font (`text-h1` / `font-display`) and generous vertical padding to carry the "editorial" tone.
+    - **Variants:** Built the four variants defined in the design system (`library`, `search`, `tag`, `collection`).
+    - **Integration:** Replaced the empty states in `BookmarkList.tsx` (Empty Library, Empty Tag) and `SearchOverlay.tsx` (Empty Search). For the library variant, a "Add your first bookmark" button is automatically rendered, which scrolls the user to the form and focuses the URL field.
+
+  - **Task 14 — Error States:**
+    - Formalized error handling across the app to prevent blank screens or over-reliance on floating toasts.
+    - **Inline Form Validation:** Replaced the toast notification in `AddBookmarkForm.tsx` and `EditBookmarkModal.tsx` for the "URL or Note is required" validation. The inputs now dynamically gain a Coral-colored border and focus ring, and display the error directly beneath the fields.
+    - **Full-Section Failure:** Created a new `<ErrorCard />` component (with a Coral-accented border and a "Try again" button) and wired it into `BookmarkList.tsx` to handle initial page load failures (e.g. 500 status or network drop), ensuring the user is never left with a blank screen.
+    - **AI Failure Confirmation:** Confirmed that `summary: null` (an AI generation failure) gracefully falls back to a normal bookmark card with no Gist block, breaking no errors and showing no scary UI.
+
+  - **Task 15 — Collections UI:** 
+    - Built `CollectionView.tsx` to handle the `/collections/:name` route.
+    - Reused `BookmarkList.tsx` by adding a `collection` prop, allowing the collection view to inherit skeleton loading, pagination, global search, and empty states automatically.
+    - Added `MobileCollections.tsx` and the `/collections` mobile route, as mobile lacks a permanent sidebar to list collections.
+    - Wired the mobile "Collections" tab in `MobileTabBar.tsx` to this new route. Added the mobile search bar directly into the Collections mobile page.
+
+  - **Task 16 — Mobile Responsive Pass:** 
+    - **AppShell & Navigation:** Built `MobileTabBar.tsx` for iOS-style bottom navigation on mobile devices (Library, Add, Collections). Removed the temporary `pb-safe` approach in favor of standard fixed bottom positioning after encountering layout bugs in Brave browser.
+    - **Add Bookmark Sheet:** Converted the mobile Add Bookmark form into a modal bottom sheet. Implemented a 3D depth effect using `backdrop-blur-sm` and a heavy upward drop-shadow (`shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.5)]`), elevating the sheet without moving the background site.
+    - **Framer Motion Gestures:** Implemented swipe-to-dismiss for the bottom sheet using `framer-motion`.
+    - **Search:** Added a mobile-only search trigger (read-only search bar) to both `Home.tsx` and `MobileCollections.tsx` that opens the full-screen `SearchOverlay`. Added a mobile "Cancel" button to the `SearchOverlay` for better mobile accessibility.
+    - **Deviations:** Initially built a native iOS-style 3D scaling effect where the background site shrunk and dimmed when the Add menu opened. Reverted this entirely due to user pushback ("don't force the background to move"), replacing it with the static backdrop blur.
+    - **New Libraries / APIs:** Imported `useDragControls` from `framer-motion` to handle mobile drag gestures.
+    - **Bugs Fixed:** 
+      - Fixed a missing `key` prop issue inside `AnimatePresence` that caused the mobile Add sheet to disappear completely.
+      - Fixed a severe frame-lag/jank issue during the drag gesture on mobile. The fix involved adding `willChange: 'transform'` to force GPU acceleration, restricting the drag listener exclusively to the top pill handle (`dragListener={false}` + `useDragControls`), and applying `touchAction: 'none'` to the handle to prevent the browser from attempting to scroll the form while dragging.
+
 ## Immediate Next Task
-Task 10 — Bookmark List + Filtering Fixes. Rebuild `BookmarkList.jsx` → `.tsx`
-layout, convert `SearchBar.jsx` to use Task 2's `Input` primitive, and fix the
-data-flow bug where search/tag filtering only operates on the currently-loaded
-page instead of the full dataset (depends on Task 11's backend endpoint for the
-full fix, but layout work can start now).
+Task 17 — Animation Pass. Finalizing the micro-interactions, layout transitions, and spring physics across the app to hit the "snappy, tactile" requirements of the design system.
 
 ## Key Decisions
 - **TypeScript migration strategy:** Incremental, file-by-file, as each component is redesigned
@@ -706,3 +748,6 @@ Task 5 (Gist "processed" state) and Task 14 (error states) to reuse rather than 
 - Heading/body responsive behavior at the 1024px breakpoint was simplified to "no shrink" rather
   than carrying forward the old scale's tablet step — worth a visual check once the app actually
   renders at that width, not just a spec read (Task 1).
+- **Collections future:** The user flagged they may want to remove collections from the backend entirely after the redesign is complete, since tags may be sufficient. Noted here to revisit after Task 20 (Final QA Pass). Do not remove until that decision is made (Task 7).
+- **Mobile Browsers (Brave):** Brave browser's ad-blocker/shields occasionally interfere with fixed-position UI elements. We removed `pb-safe` but need to keep an eye on bottom nav rendering on aggressively-blocked mobile browsers (Task 16).
+- **Mobile Drag Handle UX:** The drag-to-close behavior on the mobile Add Bookmark sheet works smoothly, but it is currently bound *only* to the top drag handle. We restricted it to avoid scroll conflicts with the form itself, but it remains an open UX question whether users will naturally expect to be able to drag anywhere on the sheet (Task 16).

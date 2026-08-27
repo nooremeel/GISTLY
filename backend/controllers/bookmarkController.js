@@ -35,7 +35,7 @@ const createBookmark = async (req, res) => {
 };
 
 // @desc    Get paginated bookmarks for the logged-in user
-// @route   GET /api/bookmarks?page=&limit=
+// @route   GET /api/bookmarks?page=&limit=&search=
 const getBookmarks = async (req, res) => {
   try {
     const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
@@ -43,6 +43,15 @@ const getBookmarks = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const filter = { user: req.user.id };
+    
+    if (req.query.search) {
+      const searchRegex = new RegExp(req.query.search, 'i');
+      filter.$or = [
+        { title: searchRegex },
+        { note: searchRegex },
+        { url: searchRegex },
+      ];
+    }
 
     const [data, total] = await Promise.all([
       Bookmark.find(filter)

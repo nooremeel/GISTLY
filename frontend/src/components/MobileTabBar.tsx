@@ -1,0 +1,54 @@
+import { NavLink, useLocation } from 'react-router-dom';
+import { Library, Plus, Folder } from 'lucide-react';
+import { cx } from '../lib/cx';
+
+export interface MobileTabBarProps {
+  onOpenAdd: () => void;
+}
+
+const tabBase = [
+  'flex flex-col items-center justify-center gap-1 flex-1 py-2',
+  'text-[10px] font-medium transition-colors duration-150',
+].join(' ');
+
+export default function MobileTabBar({ onOpenAdd }: MobileTabBarProps) {
+  const location = useLocation();
+  const isCollectionsActive = location.pathname.startsWith('/collections');
+
+  return (
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 flex h-[60px] items-center border-t border-line bg-surface px-4 shadow-[0_-4px_20px_rgba(0,0,0,0.02)]">
+      <NavLink
+        to="/"
+        end
+        className={({ isActive }) =>
+          cx(tabBase, isActive ? 'text-accent' : 'text-muted hover:text-ink')
+        }
+      >
+        <Library className="size-5" />
+        Library
+      </NavLink>
+
+      {/* Center FAB (Add) - oversized and breaking out of the top edge */}
+      <div className="flex-1 flex justify-center relative">
+        <button
+          type="button"
+          onClick={onOpenAdd}
+          className="absolute -top-10 flex h-16 w-16 items-center justify-center rounded-full bg-ink text-paper shadow-2xl active:scale-95 transition-transform"
+          aria-label="Add Bookmark"
+        >
+          <Plus className="size-7" />
+        </button>
+      </div>
+
+      <NavLink
+        to="/collections"
+        className={({ isActive }) =>
+          cx(tabBase, isActive || isCollectionsActive ? 'text-accent' : 'text-muted hover:text-ink')
+        }
+      >
+        <Folder className="size-5" />
+        Collections
+      </NavLink>
+    </nav>
+  );
+}

@@ -17,8 +17,6 @@
  * not a stream of meaningless skeleton cards.
  */
 
-/** A single shimmer placeholder bar. Width/height are caller-supplied
- *  via className so the skeleton can vary bar sizes without new props. */
 function SkeletonBar({ className }: { className?: string }) {
   return (
     <div
@@ -33,7 +31,7 @@ export default function BookmarkCardSkeleton() {
     <div
       // Matches BookmarkCard's outer shell exactly — same rounded-lg,
       // border, surface bg, and p-6 padding.
-      className="rounded-lg border border-line bg-surface p-6"
+      className="rounded-lg border border-line bg-surface p-4 md:p-6"
       aria-hidden="true"
     >
       {/* Row 1: domain-line width approximation */}

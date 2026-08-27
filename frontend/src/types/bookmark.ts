@@ -30,3 +30,12 @@ export interface Bookmark {
   createdAt: string;
   updatedAt: string;
 }
+
+/**
+ * Shape of the response from `GET /api/bookmarks/grouped`
+ */
+export interface CollectionGroup {
+  _id: string; // The collection name
+  count: number;
+  bookmarks: Bookmark[];
+}

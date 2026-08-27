@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { Pencil, Trash2 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { apiClient } from '../api/client';
 import { useToast } from '../context/ToastContext';
 import { cx } from '../lib/cx';
@@ -132,12 +133,17 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, animateGist
   const timestamp = formatRelativeTime(bookmark.createdAt);
 
   return (
-    <article
+    <motion.article
+      layout
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -4, scale: 1.015 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
       className={cx(
-        'group relative rounded-lg border border-line bg-surface p-6 text-left',
-        'transition-[transform,box-shadow,border-color] duration-200',
-        'hover:-translate-y-0.5 hover:border-accent/30 hover:shadow-sm',
-        'motion-reduce:transition-none'
+        'group relative rounded-lg border border-line bg-surface p-4 md:p-6 text-left',
+        'transition-colors duration-300',
+        'hover:border-accent/40 hover:shadow-md',
+        'motion-reduce:transform-none motion-reduce:transition-none'
       )}
     >
       <div className={cx('flex items-start gap-2', showDomainLine ? 'justify-between' : 'justify-end')}>
@@ -186,8 +192,8 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, animateGist
 
       {bookmark.note && <p className="mt-4 text-body text-muted">{bookmark.note}</p>}
 
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="mt-6 flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-2">
+        <div className="flex items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden max-w-full">
           {visibleTags.map((tag) => (
             <Tag key={tag}>{tag}</Tag>
           ))}
@@ -211,6 +217,6 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, animateGist
           triggerRef={editBtnRef}
         />
       )}
-    </article>
+    </motion.article>
   );
 }

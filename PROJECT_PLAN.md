@@ -71,7 +71,7 @@
 **Branch:** `feature/06-bookmark-crud`
 **Done When:**
 - All CRUD endpoints require a valid session; every query filters by `req.user.id`.
-- `GET /api/bookmarks` accepts `?page` and `?limit` query params (default limit 12) and returns `{ data, total, page, pages }`.
+- `GET /api/bookmarks` accepts `?page`, `?limit`, and `?search` query params and returns `{ data, total, page, pages }`.
 - Manually verify with two test accounts that User A cannot read, edit, or delete User B's bookmarks.
 
 ---

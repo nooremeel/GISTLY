@@ -75,6 +75,7 @@ export default function EditBookmarkModal({
   const [collection, setCollection] = useState(bookmark.collection ?? 'Uncategorized');
   const [tagsInput, setTagsInput] = useState((bookmark.tags ?? []).join(', '));
   const [saving, setSaving] = useState(false);
+  const [fieldError, setFieldError] = useState(false);
 
   const { showToast } = useToast();
 
@@ -153,6 +154,14 @@ export default function EditBookmarkModal({
   // ─── Form submit ──────────────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    // Mirror the backend's "at least one of url/note" rule client-side.
+    if (!url.trim() && !note.trim()) {
+      setFieldError(true);
+      return;
+    }
+    setFieldError(false);
+
     setSaving(true);
     try {
       const payload = {
@@ -183,62 +192,32 @@ export default function EditBookmarkModal({
 
   // ─── Render (portalled to document.body) ─────────────────────────────────
   return createPortal(
-    /*
-      Scrim — fixed-position, full-viewport ink overlay at ~45% opacity
-      per §18. Clicking it closes the modal. The `animate-modal-scrim` class
-      fades it in over 200ms (defined in index.css alongside gist/shimmer).
-
-      aria-hidden="true" on the scrim wrapper prevents the background
-      content from being re-announced while the dialog is open; ARIA dialog
-      semantics live on the panel element instead.
-    */
-    <div
-      className="animate-modal-scrim fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(23, 22, 26, 0.45)' }}
-      onClick={handleClose}
-      aria-hidden="true"
-    >
-      {/*
-        Panel — the actual modal surface. `onClick` stops propagation so a
-        click inside the panel doesn't bubble up to the scrim and close the
-        modal unintentionally. `aria-hidden` is NOT set here — all ARIA
-        dialog semantics live on this element.
-
-        `animate-modal-panel` scales 0.96→1 + fades in over 200ms, per §18
-        and §21's easing spec. Both animations defined in index.css.
-      */}
+    <>
       <div
-        ref={panelRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={TITLE_ID}
-        className={[
-          'animate-modal-panel',
-          'relative w-full max-w-lg',
-          'rounded-lg border border-line bg-surface',
-          'p-6 shadow-lg',
-          'flex flex-col gap-6',
-        ].join(' ')}
-        onClick={(e) => e.stopPropagation()}
-        aria-hidden={undefined}
-      >
-        {/*
-          Heading — tied to aria-labelledby so screen readers announce
-          "Edit Bookmark, dialog" when the panel receives focus.
-        */}
-        <h3 id={TITLE_ID} className="text-h3 font-semibold text-ink">
-          Edit Bookmark
-        </h3>
+        className="fixed inset-0 z-40 bg-ink/40 animate-modal-scrim"
+        onClick={handleClose}
+        aria-hidden="true"
+      />
 
-        {/*
-          Form fields — CSS grid layout (industry standard for edit panels):
-          labels in col 1 (right-aligned, vertically aligned with each field),
-          inputs in col 2. All inputs start at the exact same x-position
-          regardless of label text length — the only layout that guarantees
-          this. Labels are rendered explicitly in the grid (not via the `label`
-          prop on Input/Textarea) so each label is a real grid cell; `htmlFor`
-          keeps the label/field pairing intact for screen readers.
-        */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-0 md:p-4 pb-0 flex-col">
+        <div
+          ref={panelRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={TITLE_ID}
+          className={[
+            'relative w-full bg-surface shadow-lg',
+            'md:rounded-lg md:max-w-md',
+            'rounded-t-lg max-h-[90vh] overflow-y-auto',
+            'mt-auto md:mt-0 p-6 flex flex-col gap-6 border border-line',
+            'animate-sheet-enter md:animate-modal-panel'
+          ].join(' ')}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="md:hidden w-12 h-1.5 bg-line rounded-full mx-auto mb-2 shrink-0" />
+          <h3 id={TITLE_ID} className="text-h3 font-semibold text-ink">
+            Edit Bookmark
+          </h3>
         <form
           id="edit-bookmark-form"
           onSubmit={handleSubmit}
@@ -279,6 +258,7 @@ export default function EditBookmarkModal({
             disabled={saving}
             autoComplete="off"
             spellCheck={false}
+            error={fieldError ? 'Please provide a URL or a note.' : undefined}
           />
 
           {/* Textarea label: self-start + pt-2.5 aligns it with the field's
@@ -297,6 +277,7 @@ export default function EditBookmarkModal({
             onChange={(e) => setNote(e.target.value)}
             placeholder="Your own thoughts on why this is worth saving…"
             disabled={saving}
+            error={fieldError ? 'Please provide a URL or a note.' : undefined}
           />
 
           <label
@@ -359,8 +340,9 @@ export default function EditBookmarkModal({
             {saving ? 'Saving…' : 'Save'}
           </Button>
         </div>
+        </div>
       </div>
-    </div>,
+    </>,
     document.body
   );
 }

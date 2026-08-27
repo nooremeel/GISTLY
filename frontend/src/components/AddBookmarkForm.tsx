@@ -68,6 +68,7 @@ export interface AddBookmarkFormProps {
 export default function AddBookmarkForm({ onProcessing, onCreated }: AddBookmarkFormProps) {
   const [form, setForm] = useState(initialForm);
   const [isLoading, setIsLoading] = useState(false);
+  const [fieldError, setFieldError] = useState(false);
   const { showToast } = useToast();
 
   const handleChange = (
@@ -82,9 +83,10 @@ export default function AddBookmarkForm({ onProcessing, onCreated }: AddBookmark
 
     // Mirror the backend's "at least one of url/note" rule client-side.
     if (!form.url.trim() && !form.note.trim()) {
-      showToast('Please provide a URL or a note.', 'error');
+      setFieldError(true);
       return;
     }
+    setFieldError(false);
 
     const parsedTags = form.tags
       .split(',')
@@ -165,7 +167,7 @@ export default function AddBookmarkForm({ onProcessing, onCreated }: AddBookmark
           sizeVariant="lg"
           label="Paste a URL"
           name="url"
-          id="url"
+          id="bookmark-url"
           type="url"
           value={form.url}
           onChange={handleChange}
@@ -173,6 +175,7 @@ export default function AddBookmarkForm({ onProcessing, onCreated }: AddBookmark
           disabled={isLoading}
           autoComplete="off"
           spellCheck={false}
+          error={fieldError ? 'Please provide a URL or a note.' : undefined}
         />
         {/*
           Thin visual separator between primary and secondary fields.
@@ -205,6 +208,7 @@ export default function AddBookmarkForm({ onProcessing, onCreated }: AddBookmark
           onChange={handleChange}
           placeholder="Your own thoughts on why this is worth saving…"
           disabled={isLoading}
+          error={fieldError ? 'Please provide a URL or a note.' : undefined}
         />
 
         <Input

@@ -5,6 +5,8 @@ import AppShell from './components/AppShell';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
+import CollectionView from './pages/CollectionView';
+import MobileCollections from './pages/MobileCollections';
 import { ToastProvider } from './context/ToastContext';
 import Toast from './components/Toast';
 
@@ -24,6 +26,8 @@ function App() {
                   get their own dedicated treatment in Task 19. */}
               <Route element={<AppShell />}>
                 <Route path="/" element={<Home />} />
+                <Route path="/collections" element={<MobileCollections />} />
+                <Route path="/collections/:name" element={<CollectionView />} />
               </Route>
             </Route>
           </Routes>
