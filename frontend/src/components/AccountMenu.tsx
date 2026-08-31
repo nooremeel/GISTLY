@@ -88,7 +88,7 @@ export default function AccountMenu() {
                 <div
                     role="menu"
                     aria-label="Account"
-                    className="absolute right-0 top-[calc(100%+8px)] z-20 w-56 rounded-md border border-line bg-surface p-1 shadow-md"
+                    className="animate-dropdown-enter absolute right-0 top-[calc(100%+8px)] z-20 w-56 rounded-md border border-line bg-surface p-1 shadow-md"
                 >
                     <div className="truncate px-3 py-2 text-small text-muted">Signed in as {email}</div>
                     <div className="my-1 h-px bg-line" />

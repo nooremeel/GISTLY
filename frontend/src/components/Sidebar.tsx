@@ -101,17 +101,19 @@ export default function Sidebar() {
       {loading ? (
         <div className="px-3 py-2 text-small text-faint">Loading…</div>
       ) : collections.length === 0 ? (
-        <div className="px-3 py-2 text-small text-faint">No collections yet</div>
+        <div className="animate-fade-in px-3 py-2 text-small text-faint">No collections yet</div>
       ) : (
-        collections.map((c) => (
-          <NavItem 
-            key={c._id} 
-            icon={<Folder className="size-4" />} 
-            label={c._id} 
-            to={`/collections/${encodeURIComponent(c._id)}`}
-            count={c.count}
-          />
-        ))
+        <div className="animate-fade-in flex flex-col gap-1">
+          {collections.map((c) => (
+            <NavItem 
+              key={c._id} 
+              icon={<Folder className="size-4" />} 
+              label={c._id} 
+              to={`/collections/${encodeURIComponent(c._id)}`}
+              count={c.count}
+            />
+          ))}
+        </div>
       )}
     </nav>
   );

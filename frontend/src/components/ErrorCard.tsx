@@ -8,7 +8,7 @@ export interface ErrorCardProps {
 
 export default function ErrorCard({ message, onRetry }: ErrorCardProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-12 px-6 gap-4 text-center bg-surface border border-coral-border rounded-lg shadow-sm">
+    <div className="animate-fade-in flex flex-col items-center justify-center py-12 px-6 gap-4 text-center bg-surface border border-coral-border rounded-lg shadow-sm">
       <div className="flex items-center justify-center size-12 rounded-full bg-coral/10 mb-2">
         <AlertCircle className="size-6 text-coral" aria-hidden="true" />
       </div>

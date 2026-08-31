@@ -160,7 +160,7 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
           <button
             type="button"
             onClick={onClose}
-            className="ml-3 text-small font-medium text-muted hover:text-ink shrink-0 md:hidden"
+            className="ml-3 text-small font-medium text-muted hover:text-ink shrink-0 md:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-sm px-1"
           >
             Cancel
           </button>
@@ -192,10 +192,11 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                 
                 return (
                   <a
+                    key={bookmark._id}
                     href={bookmark.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between px-6 py-3 hover:bg-accent-subtle focus-visible:bg-accent-subtle focus-visible:outline-none transition-colors group"
+                    className="animate-fade-in flex items-center justify-between px-6 py-3 hover:bg-accent-subtle focus-visible:bg-accent-subtle focus-visible:outline-none transition-colors group"
                   >
                     <div className="flex flex-col min-w-0 pr-4">
                       <span className="text-body font-medium text-ink truncate group-hover:text-accent group-focus-visible:text-accent transition-colors">

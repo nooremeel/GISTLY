@@ -4,6 +4,8 @@ import { apiClient } from '../api/client';
 import BookmarkList from '../components/BookmarkList';
 import type { BookmarkListHandle } from '../components/BookmarkList';
 import AddBookmarkForm from '../components/AddBookmarkForm';
+import { Search } from 'lucide-react';
+import { getGreeting } from '../lib/greeting';
 
 import type { AppShellContext } from '../components/AppShell';
 import { motion, AnimatePresence, useDragControls } from 'framer-motion';
@@ -30,28 +32,14 @@ export default function Home() {
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <h1 className="text-h1">Your library</h1>
+        <h1 className="text-h1">{getGreeting()}.</h1>
         {/* Mobile Search Bar directly under heading */}
         <div className="md:hidden mt-4">
           <div
             onClick={() => setIsSearchOpen(true)}
             className="flex items-center w-full px-4 py-2.5 bg-surface border border-line rounded-md text-muted cursor-text"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="mr-2"
-            >
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
+            <Search className="mr-2 size-5" />
             <span className="text-small">Search your library...</span>
           </div>
         </div>

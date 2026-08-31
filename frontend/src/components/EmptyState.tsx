@@ -37,7 +37,7 @@ export default function EmptyState({ variant }: EmptyStateProps) {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center py-16 sm:py-24 gap-4 text-center px-6">
+    <div className="animate-fade-in flex flex-col items-center justify-center py-16 sm:py-24 gap-4 text-center px-6">
       <div className="flex flex-col gap-2">
         <h2 className="text-h1 font-semibold text-ink font-display tracking-tight">
           {content.headline}

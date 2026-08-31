@@ -3,13 +3,13 @@
 // they're meant to look and behave identically apart from single-line vs.
 // multi-line sizing.
 
-export const fieldLabel = 'block text-small font-semibold text-ink mb-2';
+export const fieldLabel = 'block text-left text-small font-semibold text-ink mb-2';
 
 // Shared by both: surface bg, line border, radius-md, ink text, faint
 // placeholder, accent focus border + low-opacity ring (never border-color
 // alone, per §8's explicit colorblind/contrast note).
 export const fieldBase = [
-  'w-full font-sans text-ink bg-surface',
+  'w-full font-sans text-ink bg-surface text-left',
   'border border-line rounded-md',
   'placeholder:text-faint',
   'transition-[border-color,box-shadow] duration-150 motion-reduce:transition-none',

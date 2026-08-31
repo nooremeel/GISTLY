@@ -137,8 +137,7 @@
   /* ---- New bare variables — genuinely new concepts with no legacy
      counterpart (surface tone, elevated surface, faint text, lime, coral). ---- */
   --surface: #fffdf9;
-  --surface-elevated: #fffdf9;
-  /* no light-mode value specified in §2 (dark-only row) — defaulted to surface; open question, see DESIGN_STATE.md */
+  --surface-elevated: #f9f7f4;
   --faint: #aaa6ad;
   --lime: #dfff57;
   --lime-wash: rgba(223, 255, 87, 0.13);
@@ -168,10 +167,10 @@
       --border: #323139;
       /* design-system §2 dark "line" */
       /* Spec: "same hex, desaturated ~10–15% if a contrast check fails
-         against #19191E" — keeping the light-mode hex as-is for now; actual
-         pass/fail check deferred to Task 18 (Accessibility Audit). */
-      --accent: #7357ff;
-      --accent-bg: rgba(115, 87, 255, 0.09);
+         against #19191E" — Violet failed (3.78:1) against #19191e. 
+         Desaturated and lightened to #a392f6 to pass WCAG AA (6.67:1). */
+      --accent: #a392f6;
+      --accent-bg: rgba(163, 146, 246, 0.09);
 
       /* Untouched legacy tokens — dark values, unchanged from before. */
       --code-bg: #1f2028;
@@ -216,15 +215,7 @@ body {
   box-sizing: border-box;
 }
 
-.legacy-page-frame {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  box-sizing: border-box;
-  min-height: 100svh;
-}
+
 
 h1,
 h2,
@@ -600,6 +591,109 @@ code {
 
   @media (prefers-reduced-motion: reduce) {
     .animate-sheet-enter {
+      animation: none;
+    }
+  }
+}
+
+/*
+  Card entrance animation (design system §21 / Task 17).
+  "Card entrance (new bookmark slides/fades in)" is explicitly listed in §21's
+  motion inventory. Plays once on mount for every BookmarkCard — page-loaded
+  cards get a subtle "list assembles" feel; freshly-created cards get the
+  entrance the spec calls for.
+
+  250ms — sits in the 200–300ms "component transition" range (§21).
+  Easing: cubic-bezier(0.22, 1, 0.36, 1) throughout (§21).
+
+  prefers-reduced-motion: animation: none — card still appears instantly;
+  state change is never removed, per §21's requirement.
+*/
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@layer utilities {
+  .animate-card-enter {
+    animation: card-enter 250ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-card-enter {
+      animation: none;
+    }
+  }
+}
+
+/*
+  Fade-in (design system §21 / Task 17).
+  A lightweight opacity-only entrance for elements that should arrive
+  without drawing attention to themselves — EmptyState, ErrorCard,
+  Sidebar collections list, SearchOverlay results.
+
+  200ms — short enough to feel instant, long enough to avoid a jarring snap.
+  prefers-reduced-motion: animation: none — element still appears, instantly.
+*/
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fade-in 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-fade-in {
+      animation: none;
+    }
+  }
+}
+
+/*
+  Dropdown entrance animation (design system §21 / Task 17).
+  Used by AccountMenu's dropdown panel. Combines opacity, Y-translate,
+  and a very subtle scale — the same pattern as modal-panel-enter but
+  shorter (150ms — micro-interaction territory per §21's 120–180ms range)
+  and smaller in magnitude, since a dropdown is a smaller surface.
+
+  No exit animation: CSS-only exit requires keeping the element mounted
+  through the animation, which adds unmount-tracking complexity. For a
+  small utility dropdown, an instant unmount is acceptable.
+
+  prefers-reduced-motion: animation: none — dropdown still opens; only
+  the motion is removed, per §21.
+*/
+@keyframes dropdown-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@layer utilities {
+  .animate-dropdown-enter {
+    animation: dropdown-enter 150ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-dropdown-enter {
       animation: none;
     }
   }

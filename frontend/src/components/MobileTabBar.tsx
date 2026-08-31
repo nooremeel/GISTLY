@@ -9,6 +9,7 @@ export interface MobileTabBarProps {
 const tabBase = [
   'flex flex-col items-center justify-center gap-1 flex-1 py-2',
   'text-[10px] font-medium transition-colors duration-150',
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset',
 ].join(' ');
 
 export default function MobileTabBar({ onOpenAdd }: MobileTabBarProps) {
@@ -33,7 +34,7 @@ export default function MobileTabBar({ onOpenAdd }: MobileTabBarProps) {
         <button
           type="button"
           onClick={onOpenAdd}
-          className="absolute -top-10 flex h-16 w-16 items-center justify-center rounded-full bg-ink text-paper shadow-2xl active:scale-95 transition-transform"
+          className="absolute -top-10 flex h-16 w-16 items-center justify-center rounded-full bg-ink text-paper shadow-2xl active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
           aria-label="Add Bookmark"
         >
           <Plus className="size-7" />

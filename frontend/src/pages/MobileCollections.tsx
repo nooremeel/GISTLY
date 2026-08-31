@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Folder } from 'lucide-react';
+import { Folder, Search } from 'lucide-react';
 import { apiClient } from '../api/client';
 import type { CollectionGroup } from '../types/bookmark';
 import { Badge } from '../components/Badge';
@@ -36,21 +36,7 @@ export default function MobileCollections() {
             onClick={() => setIsSearchOpen(true)}
             className="flex items-center w-full px-4 py-2.5 bg-surface border border-line rounded-md text-muted cursor-text"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="mr-2"
-            >
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
+            <Search className="mr-2 size-5" />
             <span className="text-small">Search your library...</span>
           </div>
         </div>
