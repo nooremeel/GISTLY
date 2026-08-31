@@ -311,35 +311,37 @@ export default function EditBookmarkModal({
             placeholder="Work, Personal, Reading List…"
             disabled={saving}
           />
+
+          {/*
+            Footer — right-aligned per §18 ("Footer actions: right-aligned,
+            Secondary (Cancel) + Primary (Save)").
+
+            Rendered inside the <form> to avoid a React synthetic event bug 
+            where onSubmit fails to fire for submit buttons placed outside 
+            portalled forms. `col-span-2` makes it span the full grid width.
+
+            Saving is a non-AI action: plain disabled state + text swap per §16.
+            The `loading` prop (Gist-mark pulse) is reserved for AI-triggering
+            actions only (Add Bookmark). This is §16's explicit distinction.
+          */}
+          <div className="col-span-2 flex items-center justify-end gap-3 mt-2">
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={saving}
+              onClick={handleClose}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={saving}
+            >
+              {saving ? 'Saving…' : 'Save'}
+            </Button>
+          </div>
         </form>
-
-        {/*
-          Footer — right-aligned per §18 ("Footer actions: right-aligned,
-          Secondary (Cancel) + Primary (Save)"). Both buttons associate with
-          the form above via `form="edit-bookmark-form"`.
-
-          Saving is a non-AI action: plain disabled state + text swap per §16.
-          The `loading` prop (Gist-mark pulse) is reserved for AI-triggering
-          actions only (Add Bookmark). This is §16's explicit distinction.
-        */}
-        <div className="flex items-center justify-end gap-3">
-          <Button
-            type="button"
-            variant="secondary"
-            disabled={saving}
-            onClick={handleClose}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            form="edit-bookmark-form"
-            variant="primary"
-            disabled={saving}
-          >
-            {saving ? 'Saving…' : 'Save'}
-          </Button>
-        </div>
         </div>
       </div>
     </>,

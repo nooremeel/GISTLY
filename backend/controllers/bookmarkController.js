@@ -98,7 +98,7 @@ const getBookmark = async (req, res) => {
 // @route   PUT /api/bookmarks/:id
 const updateBookmark = async (req, res) => {
   try {
-    const { url, note, tags, collection } = req.body;
+    const { title, url, note, tags, collection } = req.body;
 
     const bookmark = await Bookmark.findOne({
       _id: req.params.id,
