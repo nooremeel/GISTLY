@@ -39,3 +39,11 @@ export interface CollectionGroup {
   count: number;
   bookmarks: Bookmark[];
 }
+
+/**
+ * Shape of the response from `GET /api/bookmarks/tags`
+ */
+export interface TagGroup {
+  _id: string; // The tag name
+  count: number;
+}

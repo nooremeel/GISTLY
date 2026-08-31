@@ -92,12 +92,12 @@ export default function Sidebar() {
       className="hidden w-56 shrink-0 flex-col gap-1 border-r border-line px-3 py-6 md:flex overflow-y-auto"
     >
       <NavItem icon={<Library className="size-4" />} label="Library" to="/" />
-      <NavItem icon={<TagsIcon className="size-4" />} label="Tags" comingSoon />
-      
+      <NavItem icon={<TagsIcon className="size-4" />} label="Tags" to="/tags" />
+
       <div className="mt-6 mb-2 px-3 text-micro text-muted font-semibold tracking-wider uppercase">
         Collections
       </div>
-      
+
       {loading ? (
         <div className="px-3 py-2 text-small text-faint">Loading…</div>
       ) : collections.length === 0 ? (
@@ -105,10 +105,10 @@ export default function Sidebar() {
       ) : (
         <div className="animate-fade-in flex flex-col gap-1">
           {collections.map((c) => (
-            <NavItem 
-              key={c._id} 
-              icon={<Folder className="size-4" />} 
-              label={c._id} 
+            <NavItem
+              key={c._id}
+              icon={<Folder className="size-4" />}
+              label={c._id}
               to={`/collections/${encodeURIComponent(c._id)}`}
               count={c.count}
             />

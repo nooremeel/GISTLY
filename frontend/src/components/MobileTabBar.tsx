@@ -1,6 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Library, Plus, Folder } from 'lucide-react';
+import { Library, Plus, Folder, Tags, Search } from 'lucide-react';
 import { cx } from '../lib/cx';
+import AccountMenu from './AccountMenu';
 
 export interface MobileTabBarProps {
   onOpenAdd: () => void;
@@ -15,9 +16,10 @@ const tabBase = [
 export default function MobileTabBar({ onOpenAdd }: MobileTabBarProps) {
   const location = useLocation();
   const isCollectionsActive = location.pathname.startsWith('/collections');
+  const isTagsActive = location.pathname.startsWith('/tags');
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 flex h-[60px] items-center border-t border-line bg-surface px-4 shadow-[0_-4px_20px_rgba(0,0,0,0.02)]">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 flex h-[60px] items-center border-t border-line bg-surface px-2 shadow-[0_-4px_20px_rgba(0,0,0,0.02)]">
       <NavLink
         to="/"
         end
@@ -27,6 +29,16 @@ export default function MobileTabBar({ onOpenAdd }: MobileTabBarProps) {
       >
         <Library className="size-5" />
         Library
+      </NavLink>
+
+      <NavLink
+        to="/tags"
+        className={({ isActive }) =>
+          cx(tabBase, isActive || isTagsActive ? 'text-accent' : 'text-muted hover:text-ink')
+        }
+      >
+        <Tags className="size-5" />
+        Tags
       </NavLink>
 
       {/* Center FAB (Add) - oversized and breaking out of the top edge */}
@@ -50,6 +62,8 @@ export default function MobileTabBar({ onOpenAdd }: MobileTabBarProps) {
         <Folder className="size-5" />
         Collections
       </NavLink>
+
+      <AccountMenu variant="tab" />
     </nav>
   );
 }

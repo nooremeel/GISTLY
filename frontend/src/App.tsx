@@ -7,6 +7,8 @@ import Register from './pages/Register';
 import Home from './pages/Home';
 import CollectionView from './pages/CollectionView';
 import MobileCollections from './pages/MobileCollections';
+import TagsView from './pages/TagsView';
+import TagDetailView from './pages/TagDetailView';
 import { ToastProvider } from './context/ToastContext';
 import Toast from './components/Toast';
 
@@ -26,6 +28,8 @@ function App() {
                   get their own dedicated treatment in Task 19. */}
               <Route element={<AppShell />}>
                 <Route path="/" element={<Home />} />
+                <Route path="/tags" element={<TagsView />} />
+                <Route path="/tags/:tag" element={<TagDetailView />} />
                 <Route path="/collections" element={<MobileCollections />} />
                 <Route path="/collections/:name" element={<CollectionView />} />
               </Route>

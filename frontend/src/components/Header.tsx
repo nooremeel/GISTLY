@@ -45,7 +45,9 @@ export default function Header({ onOpenSearch }: HeaderProps) {
         </Button>
       </div>
 
-      <AccountMenu />
+      <div className="hidden md:block shrink-0">
+        <AccountMenu />
+      </div>
     </header>
   );
 }

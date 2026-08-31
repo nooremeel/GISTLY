@@ -50,6 +50,7 @@ const getBookmarks = async (req, res) => {
         { title: searchRegex },
         { note: searchRegex },
         { url: searchRegex },
+        { tags: searchRegex },
       ];
     }
 
@@ -178,19 +179,39 @@ const getGrouped = async (req, res) => {
 // GET /api/bookmarks/tags/:tag — bookmarks matching a single tag (scoped to user)
 const getByTag = async (req, res) => {
   try {
-    const userId = new mongoose.Types.ObjectId(req.user.id);
     const { tag } = req.params;
 
-    const results = await Bookmark.aggregate([
-      { $match: { user: userId } },
-      { $unwind: '$tags' },
-      { $match: { tags: tag } },
-    ]);
+    const results = await Bookmark.find({
+      user: req.user.id,
+      tags: tag
+    }).sort({ createdAt: -1 });
 
     res.status(200).json({ data: results });
   } catch (err) {
     console.error('getByTag error:', err);
     res.status(500).json({ message: 'Server error while fetching bookmarks by tag' });
+  }
+};
+
+// GET /api/bookmarks/tags — all tags grouped and counted
+const getTags = async (req, res) => {
+  try {
+    const userId = new mongoose.Types.ObjectId(req.user.id);
+    const tags = await Bookmark.aggregate([
+      { $match: { user: userId } },
+      { $unwind: '$tags' },
+      {
+        $group: {
+          _id: '$tags',
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { count: -1, _id: 1 } },
+    ]);
+    res.status(200).json({ data: tags });
+  } catch (err) {
+    console.error('getTags error:', err);
+    res.status(500).json({ message: 'Server error while fetching tags' });
   }
 };
 
@@ -202,4 +223,5 @@ module.exports = {
   deleteBookmark,
   getGrouped,
   getByTag,
+  getTags,
 };
