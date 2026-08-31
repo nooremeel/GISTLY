@@ -31,6 +31,11 @@ function validateBookmarkUrl(req, res, next) {
     return next();
   }
 
+  if (!/^https?:\/\//i.test(url)) {
+    url = 'https://' + url;
+    req.body.url = url;
+  }
+
   let parsed;
   try {
     parsed = new URL(url);

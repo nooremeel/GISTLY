@@ -95,12 +95,17 @@ export default function AddBookmarkForm({ onProcessing, onCreated }: AddBookmark
 
     const tempId = crypto.randomUUID();
 
+    let finalUrl = form.url.trim();
+    if (finalUrl && !/^https?:\/\//i.test(finalUrl)) {
+      finalUrl = 'https://' + finalUrl;
+    }
+
     // Step 1 — optimistic: put a ProcessingCard in the list immediately.
     const processingBookmark: ProcessingBookmark = {
       _id: tempId,
       _processing: true,
       title: form.title.trim(),
-      url: form.url.trim() || undefined,
+      url: finalUrl || undefined,
       tags: parsedTags,
       collection: form.collection.trim() || 'Uncategorized',
       createdAt: new Date().toISOString(),
@@ -115,7 +120,7 @@ export default function AddBookmarkForm({ onProcessing, onCreated }: AddBookmark
     try {
       const bookmark = (await apiClient.post('/api/bookmarks', {
         title: processingBookmark.title,
-        url: processingBookmark.url,
+        url: finalUrl || undefined,
         note: form.note.trim(),   // note is in the payload but not in ProcessingCard
         collection: processingBookmark.collection,
         tags: parsedTags,

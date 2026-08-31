@@ -3,19 +3,28 @@ const mongoose = require('mongoose');
 const Bookmark = require('../models/Bookmark');
 const { generateSummaryAndTags } = require('../services/aiService');
 
+const toTitleCase = (str) => {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+};
+
 // @desc    Create a bookmark
 // @route   POST /api/bookmarks
 const createBookmark = async (req, res) => {
   try {
     const { title, url, note, tags: userTags = [], collection } = req.body;
-    const { summary, tags: aiTags } = await generateSummaryAndTags({ url, note });
+    const { summary, tags: aiTags, fetchedTitle } = await generateSummaryAndTags({ url, note, userTags });
     const mergedTags = [...userTags, ...aiTags]
       .map((t) => t.trim())
       .filter(Boolean)
-      .filter((t, i, arr) => arr.findIndex((x) => x.toLowerCase() === t.toLowerCase()) === i);
+      .map(toTitleCase)
+      .filter((t, i, arr) => arr.indexOf(t) === i);
+      
+    const finalTitle = title || fetchedTitle || '';
+    
     const bookmark = await Bookmark.create({
       user: req.user.id,
-      title,
+      title: finalTitle,
       url,
       note,
       collection,
@@ -113,7 +122,13 @@ const updateBookmark = async (req, res) => {
     if (title !== undefined) bookmark.title = title;
     if (url !== undefined) bookmark.url = url;
     if (note !== undefined) bookmark.note = note;
-    if (tags !== undefined) bookmark.tags = tags;
+    if (tags !== undefined) {
+      bookmark.tags = tags
+        .map((t) => t.trim())
+        .filter(Boolean)
+        .map(toTitleCase)
+        .filter((t, i, arr) => arr.indexOf(t) === i);
+    }
     if (collection !== undefined) bookmark.collection = collection;
 
     await bookmark.save(); // triggers pre('validate') hook
@@ -181,9 +196,10 @@ const getByTag = async (req, res) => {
   try {
     const { tag } = req.params;
 
+    const escapedTag = tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const results = await Bookmark.find({
       user: req.user.id,
-      tags: tag
+      tags: { $regex: new RegExp(`^${escapedTag}$`, 'i') }
     }).sort({ createdAt: -1 });
 
     res.status(200).json({ data: results });
