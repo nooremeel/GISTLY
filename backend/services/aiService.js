@@ -12,12 +12,14 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 async function generateSummaryAndTags({ url, note, userTags = [] }) {
   let content = null;
   let fetchedTitle = null;
+  let fetchedImage = null;
   let isJustUrl = false;
 
   if (url) {
     const data = await fetchPageData(url);
     content = data.content;
     fetchedTitle = data.fetchedTitle;
+    fetchedImage = data.fetchedImage;
   }
   if (!content) {
     if (note) {
@@ -27,7 +29,7 @@ async function generateSummaryAndTags({ url, note, userTags = [] }) {
       isJustUrl = true;
     }
   }
-  if (!content) return { summary: null, tags: [], fetchedTitle };
+  if (!content) return { summary: null, tags: [], fetchedTitle, fetchedImage };
 
   let aiTimeoutId;
   try {
@@ -87,11 +89,12 @@ ${content}`;
       summary: parsed.summary,
       tags: parsed.tags.slice(0, 3),
       fetchedTitle,
+      fetchedImage,
     };
   } catch (err) {
     clearTimeout(aiTimeoutId);
     console.error('aiService: generation failed —', err.message);
-    return { summary: null, tags: [], fetchedTitle };
+    return { summary: null, tags: [], fetchedTitle, fetchedImage };
   }
 }
 

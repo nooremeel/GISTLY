@@ -5,10 +5,11 @@ const FETCH_TIMEOUT_MS = 6000;
 const MAX_CHARS = 25000;
 
 async function fetchPageData(url) {
-  if (!url) return { content: null, fetchedTitle: null };
+  if (!url) return { content: null, fetchedTitle: null, fetchedImage: null };
 
   let content = null;
   let fetchedTitle = null;
+  let fetchedImage = null;
 
   let ytTimeoutId;
   try {
@@ -20,6 +21,9 @@ async function fetchPageData(url) {
           const oembedData = await oembedRes.json();
           if (oembedData.title && oembedData.author_name) {
              fetchedTitle = `${oembedData.title} - ${oembedData.author_name}`;
+          }
+          if (oembedData.thumbnail_url) {
+             fetchedImage = oembedData.thumbnail_url;
           }
         }
       } catch (e) {
@@ -41,12 +45,12 @@ async function fetchPageData(url) {
           content = fullTranscript.slice(0, MAX_CHARS);
         }
       }
-      return { content, fetchedTitle };
+      return { content, fetchedTitle, fetchedImage };
     }
   } catch (err) {
     clearTimeout(ytTimeoutId);
     console.error('urlFetcher: youtube transcript failed —', err.message);
-    return { content, fetchedTitle };
+    return { content, fetchedTitle, fetchedImage };
   }
 
   const controller = new AbortController();
@@ -58,15 +62,19 @@ async function fetchPageData(url) {
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; BookmarkBot/1.0)' },
     });
 
-    if (!res.ok) return { content: null, fetchedTitle: null };
+    if (!res.ok) return { content: null, fetchedTitle: null, fetchedImage: null };
 
     const contentType = res.headers.get('content-type') || '';
-    if (!contentType.includes('text/html')) return { content: null, fetchedTitle: null };
+    if (!contentType.includes('text/html')) return { content: null, fetchedTitle: null, fetchedImage: null };
 
     const html = await res.text();
     const $ = cheerio.load(html);
 
     fetchedTitle = $('title').text().trim() || null;
+    fetchedImage = $('meta[property="og:image"]').attr('content') || 
+                   $('meta[name="twitter:image"]').attr('content') || 
+                   $('link[rel="image_src"]').attr('href') || 
+                   null;
 
     $('script, style, nav, footer, header, noscript, iframe').remove();
 
@@ -76,10 +84,10 @@ async function fetchPageData(url) {
       content = text.slice(0, MAX_CHARS);
     }
     
-    return { content, fetchedTitle };
+    return { content, fetchedTitle, fetchedImage };
   } catch (err) {
     console.error('urlFetcher: fetch failed —', err.message);
-    return { content: null, fetchedTitle: null };
+    return { content: null, fetchedTitle: null, fetchedImage: null };
   } finally {
     clearTimeout(timeout);
   }

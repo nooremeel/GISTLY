@@ -13,7 +13,7 @@ const toTitleCase = (str) => {
 const createBookmark = async (req, res) => {
   try {
     const { title, url, note, tags: userTags = [], collection, imageUrl } = req.body;
-    const { summary, tags: aiTags, fetchedTitle } = await generateSummaryAndTags({ url, note, userTags });
+    const { summary, tags: aiTags, fetchedTitle, fetchedImage } = await generateSummaryAndTags({ url, note, userTags });
     const mergedTags = [...userTags, ...aiTags]
       .map((t) => t.trim())
       .filter(Boolean)
@@ -21,6 +21,7 @@ const createBookmark = async (req, res) => {
       .filter((t, i, arr) => arr.indexOf(t) === i);
       
     const finalTitle = title || fetchedTitle || '';
+    const finalImageUrl = imageUrl || fetchedImage || '';
     
     const bookmark = await Bookmark.create({
       user: req.user.id,
@@ -28,7 +29,7 @@ const createBookmark = async (req, res) => {
       url,
       note,
       collection,
-      imageUrl,
+      imageUrl: finalImageUrl,
       summary,
       tags: mergedTags,
     });
