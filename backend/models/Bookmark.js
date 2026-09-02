@@ -34,6 +34,10 @@ const bookmarkSchema = new mongoose.Schema(
       trim: true,
       default: 'Uncategorized',
     },
+    imageUrl: {
+      type: String,
+      trim: true,
+    },
   },
   {
     timestamps: true, // adds createdAt and updatedAt

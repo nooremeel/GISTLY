@@ -72,8 +72,8 @@ const LIMIT = 12;
  * For now: client-side filter is a known limitation, clearly noted here and
  * in `DESIGN_STATE.md`, not a bug introduced by this task.
  */
-const BookmarkList = forwardRef<BookmarkListHandle, {}>(
-  function BookmarkList(_props, ref) {
+const BookmarkList = forwardRef<BookmarkListHandle, { onAdd?: () => void }>(
+  function BookmarkList({ onAdd }, ref) {
     const [bookmarks, setBookmarks] = useState<BookmarkItem[]>([]);
     const [page, setPage] = useState(1);
     const [pages, setPages] = useState(1);
@@ -190,7 +190,7 @@ const BookmarkList = forwardRef<BookmarkListHandle, {}>(
         {error ? (
           <ErrorCard message={error} onRetry={() => fetchPage(1, { append: false })} />
         ) : isTrulyEmpty ? (
-          <EmptyState variant="library" />
+          <EmptyState variant="library" onAdd={onAdd} />
         ) : isInitialLoad ? (
           // Initial load — skeleton cards
           <div

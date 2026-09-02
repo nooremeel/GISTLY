@@ -1,24 +1,27 @@
 // frontend/src/components/AccountMenu.tsx
 import { useEffect, useRef, useState } from 'react';
-import { ChevronDown, LogOut, User } from 'lucide-react';
+import { ChevronDown, LogOut, User, Image as ImageIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { cx } from '../lib/cx';
-
+import { apiClient, getImageUrl } from '../api/client';
 
 interface AuthContextValue {
-    user: { email?: string } | null;
+    user: { email?: string; profilePicture?: string } | null;
     logout: () => Promise<void>;
+    updateProfile: (data: any) => Promise<void>;
 }
 
 export default function AccountMenu({ variant = 'header' }: { variant?: 'header' | 'tab' }) {
 
-    const { user, logout } = useAuth() as AuthContextValue;
+    const { user, logout, updateProfile } = useAuth() as AuthContextValue;
 
     const { showToast } = useToast() as { showToast: (message: string, type?: string) => void };
     const [open, setOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
     const triggerRef = useRef<HTMLButtonElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [isUploading, setIsUploading] = useState(false);
 
     useEffect(() => {
         if (!open) return;
@@ -55,6 +58,26 @@ export default function AccountMenu({ variant = 'header' }: { variant?: 'header'
         showToast('Logged out successfully', 'success');
     };
 
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('image', file);
+
+        setIsUploading(true);
+        try {
+            const res: any = await apiClient.postFormData('/api/uploads', formData);
+            await updateProfile({ profilePicture: res.url });
+            showToast('Profile picture updated', 'success');
+        } catch (err) {
+            showToast(err instanceof Error ? err.message : 'Failed to update profile picture', 'error');
+        } finally {
+            setIsUploading(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    };
+
     return (
         <div ref={containerRef} className={cx('relative', variant === 'tab' && 'flex-1 flex')}>
             <button
@@ -71,15 +94,26 @@ export default function AccountMenu({ variant = 'header' }: { variant?: 'header'
                       : 'flex flex-col items-center justify-center gap-1 flex-1 py-2 w-full text-[10px] font-medium text-muted hover:text-ink'
                 )}
             >
-                <span
-                    aria-hidden="true"
-                    className={cx(
-                        "flex items-center justify-center rounded-full font-semibold text-paper",
-                        variant === 'header' ? "size-8 bg-ink text-small" : "size-6 bg-ink text-xs"
-                    )}
-                >
-                    {initial}
-                </span>
+                {user.profilePicture ? (
+                    <img
+                        src={getImageUrl(user.profilePicture)}
+                        alt="Profile"
+                        className={cx(
+                            "object-cover rounded-full shrink-0 border border-line",
+                            variant === 'header' ? "size-8" : "size-6"
+                        )}
+                    />
+                ) : (
+                    <span
+                        aria-hidden="true"
+                        className={cx(
+                            "flex shrink-0 items-center justify-center rounded-full font-semibold text-paper",
+                            variant === 'header' ? "size-8 bg-ink text-small" : "size-6 bg-ink text-xs"
+                        )}
+                    >
+                        {initial}
+                    </span>
+                )}
                 
                 {variant === 'header' && (
                     <>
@@ -106,6 +140,30 @@ export default function AccountMenu({ variant = 'header' }: { variant?: 'header'
                 >
                     <div className="truncate px-3 py-2 text-small text-muted">Signed in as {email}</div>
                     <div className="my-1 h-px bg-line" />
+                    
+                    <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploading}
+                        className={cx(
+                            'flex w-full items-center gap-2 rounded-sm px-3 py-2 text-left text-small text-ink',
+                            'transition-colors duration-150 hover:bg-accent-subtle',
+                            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
+                            isUploading && 'opacity-50 cursor-not-allowed'
+                        )}
+                    >
+                        <ImageIcon aria-hidden="true" className="size-4 text-muted" />
+                        {isUploading ? 'Uploading...' : 'Change picture'}
+                    </button>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        ref={fileInputRef}
+                        onChange={handleImageUpload}
+                        className="hidden"
+                    />
+
                     <button
                         type="button"
                         role="menuitem"

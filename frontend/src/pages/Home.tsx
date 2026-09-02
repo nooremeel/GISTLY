@@ -1,14 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import BookmarkList from '../components/BookmarkList';
-import type { BookmarkListHandle } from '../components/BookmarkList';
-import AddBookmarkForm from '../components/AddBookmarkForm';
 import { Search } from 'lucide-react';
 import { getGreeting } from '../lib/greeting';
 
 import type { AppShellContext } from '../components/AppShell';
 import { motion, AnimatePresence, useDragControls } from 'framer-motion';
+import AddBookmarkForm from '../components/AddBookmarkForm';
 
 interface HealthStatus {
   status: string;
@@ -18,8 +17,13 @@ interface HealthStatus {
 export default function Home() {
   const [health, setHealth] = useState<HealthStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const bookmarkListRef = useRef<BookmarkListHandle>(null);
-  const { isMobileAddOpen, setIsMobileAddOpen, setIsSearchOpen } = useOutletContext<AppShellContext>();
+  const {
+    isMobileAddOpen,
+    setIsMobileAddOpen,
+    setIsSearchOpen,
+    setIsAddOpen,
+    bookmarkListRef,
+  } = useOutletContext<AppShellContext>();
   const dragControls = useDragControls();
 
   useEffect(() => {
@@ -45,22 +49,14 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Desktop inline form */}
-      <section
-        id="add-bookmark-desktop"
-        aria-label="Add a bookmark"
-        className="hidden md:block"
-      >
-        <AddBookmarkForm
-          onProcessing={(p) => bookmarkListRef.current?.addBookmark(p)}
-          onCreated={(b) => {
-            const { _tempId, ...realBookmark } = b;
-            bookmarkListRef.current?.replaceBookmark(_tempId, realBookmark);
-          }}
-        />
-      </section>
+      {/*
+        Desktop: inline form removed — "Add" button in the header opens
+        AddBookmarkModal (rendered at AppShell level). bookmarkListRef is
+        now owned by AppShell and forwarded here via outlet context so the
+        modal can drive optimistic updates from outside this page.
 
-      {/* Mobile: Framer Motion bottom sheet when open. */}
+        Mobile: Framer Motion bottom sheet (unchanged).
+      */}
       <AnimatePresence>
         {isMobileAddOpen && (
           <motion.div
@@ -118,7 +114,7 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      <BookmarkList ref={bookmarkListRef} />
+      <BookmarkList ref={bookmarkListRef} onAdd={() => setIsAddOpen(true)} />
 
       {(error || !health) && (
         <p className="text-small text-faint">

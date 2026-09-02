@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
+const path = require('path');
 
 const applySecurityMiddleware = require('./middleware/security');
 const { authLimiter, aiLimiter } = require('./middleware/rateLimiter');
@@ -29,6 +30,8 @@ app.post('/api/bookmarks', aiLimiter, validateBookmarkUrl);
 
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/bookmarks', require('./routes/bookmarks'));
+app.use('/api/uploads', require('./routes/uploads'));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use(notFound);
 app.use(errorHandler);

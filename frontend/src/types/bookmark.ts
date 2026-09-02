@@ -26,6 +26,7 @@ export interface Bookmark {
   note?: string;
   tags: string[];
   summary?: string | null;
+  imageUrl?: string;
   collection: string;
   createdAt: string;
   updatedAt: string;

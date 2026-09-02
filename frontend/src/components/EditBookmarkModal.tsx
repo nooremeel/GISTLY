@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { apiClient } from '../api/client';
+import { Image as ImageIcon, X } from 'lucide-react';
+import { apiClient, getImageUrl } from '../api/client';
 import { useToast } from '../context/ToastContext';
 import { Input } from './Input';
+import { AutocompleteInput } from './AutocompleteInput';
 import { Textarea } from './Textarea';
 import { Button } from './Button';
 import type { Bookmark } from '../types/bookmark';
@@ -73,9 +75,24 @@ export default function EditBookmarkModal({
   const [url, setUrl] = useState(bookmark.url ?? '');
   const [note, setNote] = useState(bookmark.note ?? '');
   const [collection, setCollection] = useState(bookmark.collection ?? 'Uncategorized');
-  const [tagsInput, setTagsInput] = useState((bookmark.tags ?? []).join(', '));
+  const [tagsInput, setTagsInput] = useState<string[]>(bookmark.tags ?? []);
+  const [imageUrl, setImageUrl] = useState(bookmark.imageUrl ?? '');
   const [saving, setSaving] = useState(false);
   const [fieldError, setFieldError] = useState(false);
+  const [availableTags, setAvailableTags] = useState<string[]>([]);
+  const [availableCollections, setAvailableCollections] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    apiClient.get('/api/bookmarks/tags').then((res: any) => {
+      setAvailableTags(res.data.map((t: any) => t._id));
+    }).catch(() => {});
+
+    apiClient.get('/api/bookmarks/collections').then((res: any) => {
+      setAvailableCollections(res.data.map((c: any) => c._id));
+    }).catch(() => {});
+  }, []);
 
   const { showToast } = useToast();
 
@@ -151,6 +168,29 @@ export default function EditBookmarkModal({
     return () => document.removeEventListener('keydown', handleTab);
   }, []);
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    setIsUploading(true);
+    try {
+      const res: any = await apiClient.postFormData('/api/uploads', formData);
+      setImageUrl(res.url);
+      showToast('Image uploaded', 'success');
+    } catch (err) {
+      showToast(
+        err instanceof Error ? err.message : 'Failed to upload image',
+        'error'
+      );
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   // ─── Form submit ──────────────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -169,7 +209,8 @@ export default function EditBookmarkModal({
         url,
         note,
         collection,
-        tags: tagsInput.split(',').map((t) => t.trim()).filter(Boolean),
+        imageUrl: imageUrl || undefined,
+        tags: tagsInput.map((t) => t.trim()).filter(Boolean),
       };
       const updated = (await apiClient.put(
         `/api/bookmarks/${bookmark._id}`,
@@ -286,13 +327,14 @@ export default function EditBookmarkModal({
           >
             Tags
           </label>
-          <Input
+          <AutocompleteInput
             id="edit-tags"
             name="tags"
-            type="text"
+            options={availableTags}
+            multiple
             value={tagsInput}
-            onChange={(e) => setTagsInput(e.target.value)}
-            placeholder="design, frontend  (comma-separated)"
+            onChange={setTagsInput}
+            placeholder="design, frontend (press Enter)"
             disabled={saving}
           />
 
@@ -302,15 +344,73 @@ export default function EditBookmarkModal({
           >
             Collection
           </label>
-          <Input
+          <AutocompleteInput
             id="edit-collection"
             name="collection"
-            type="text"
+            options={availableCollections}
             value={collection}
-            onChange={(e) => setCollection(e.target.value)}
+            onChange={setCollection}
             placeholder="Work, Personal, Reading List…"
             disabled={saving}
           />
+
+          <label className="self-start pt-2.5 text-right text-small font-semibold text-ink">
+            Cover Image
+          </label>
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-2">
+              <Input
+                name="imageUrl"
+                placeholder="Paste image URL..."
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                disabled={saving || isUploading}
+                wrapperClassName="flex-1"
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                className="shrink-0 gap-2"
+                onClick={() => fileInputRef.current?.click()}
+                loading={isUploading}
+                disabled={saving}
+              >
+                <ImageIcon className="size-4 text-muted" />
+                Upload
+              </Button>
+            </div>
+            {imageUrl && (
+              <div className="relative inline-block w-max mt-2">
+                <img 
+                  src={getImageUrl(imageUrl)} 
+                  alt="Cover preview" 
+                  className="h-24 w-40 object-cover rounded-md border border-line"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                  onLoad={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'block';
+                  }}
+                />
+                <button
+                  type="button"
+                  className="absolute -top-2 -right-2 rounded-full bg-surface p-1 border border-line shadow-sm hover:bg-paper"
+                  onClick={() => setImageUrl('')}
+                  title="Remove image"
+                >
+                  <X className="size-3 text-muted" />
+                </button>
+              </div>
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              onChange={handleImageUpload}
+              className="hidden"
+              disabled={saving || isUploading}
+            />
+          </div>
 
           {/*
             Footer — right-aligned per §18 ("Footer actions: right-aligned,

@@ -9,7 +9,8 @@ const {
   deleteBookmark,
   getGrouped,
   getByTag,
-  getTags
+  getTags,
+  getCollections
 } = require('../controllers/bookmarkController');
 
 router.use(protect); // every route below requires a valid session
@@ -19,6 +20,7 @@ router.route('/')
   .post(createBookmark);
 
 router.get('/grouped', getGrouped);
+router.get('/collections', getCollections);
 router.get('/tags', getTags);
 router.get('/tags/:tag', getByTag);
 

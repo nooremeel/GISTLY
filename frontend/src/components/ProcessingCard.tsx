@@ -12,7 +12,7 @@ import type { Bookmark } from '../types/bookmark';
  */
 export type ProcessingBookmark = Pick<
   Bookmark,
-  '_id' | 'title' | 'url' | 'tags' | 'collection' | 'createdAt'
+  '_id' | 'title' | 'url' | 'tags' | 'collection' | 'createdAt' | 'imageUrl'
 > & {
   /** Client-side only — never set by the server. Used by `BookmarkList`
    *  to distinguish this from a real `Bookmark` so it renders

@@ -65,7 +65,24 @@ function logout(req, res) {
 
 async function getMe(req, res) {
   // req.user is set by the auth middleware
-  return res.status(200).json({ id: req.user._id, email: req.user.email });
+  return res.status(200).json({ id: req.user._id, email: req.user.email, profilePicture: req.user.profilePicture });
 }
 
-module.exports = { register, login, logout, getMe };
+async function updateMe(req, res) {
+  try {
+    const { profilePicture } = req.body;
+    const user = await User.findById(req.user._id);
+    
+    if (profilePicture !== undefined) {
+      user.profilePicture = profilePicture;
+    }
+    
+    await user.save();
+    return res.status(200).json({ id: user._id, email: user.email, profilePicture: user.profilePicture });
+  } catch (err) {
+    console.error('Update me error:', err.message);
+    return res.status(500).json({ message: 'Server error updating profile' });
+  }
+}
+
+module.exports = { register, login, logout, getMe, updateMe };

@@ -91,7 +91,7 @@ export default function Sidebar() {
       aria-label="Primary"
       className="hidden w-56 shrink-0 flex-col gap-1 border-r border-line px-3 py-6 md:flex overflow-y-auto"
     >
-      <NavItem icon={<Library className="size-4" />} label="Library" to="/" />
+      <NavItem icon={<Library className="size-4" />} label="Library" to="/library" />
       <NavItem icon={<TagsIcon className="size-4" />} label="Tags" to="/tags" />
 
       <div className="mt-6 mb-2 px-3 text-micro text-muted font-semibold tracking-wider uppercase">

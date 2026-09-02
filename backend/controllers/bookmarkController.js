@@ -12,7 +12,7 @@ const toTitleCase = (str) => {
 // @route   POST /api/bookmarks
 const createBookmark = async (req, res) => {
   try {
-    const { title, url, note, tags: userTags = [], collection } = req.body;
+    const { title, url, note, tags: userTags = [], collection, imageUrl } = req.body;
     const { summary, tags: aiTags, fetchedTitle } = await generateSummaryAndTags({ url, note, userTags });
     const mergedTags = [...userTags, ...aiTags]
       .map((t) => t.trim())
@@ -28,6 +28,7 @@ const createBookmark = async (req, res) => {
       url,
       note,
       collection,
+      imageUrl,
       summary,
       tags: mergedTags,
     });
@@ -108,7 +109,7 @@ const getBookmark = async (req, res) => {
 // @route   PUT /api/bookmarks/:id
 const updateBookmark = async (req, res) => {
   try {
-    const { title, url, note, tags, collection } = req.body;
+    const { title, url, note, tags, collection, imageUrl } = req.body;
 
     const bookmark = await Bookmark.findOne({
       _id: req.params.id,
@@ -130,6 +131,7 @@ const updateBookmark = async (req, res) => {
         .filter((t, i, arr) => arr.indexOf(t) === i);
     }
     if (collection !== undefined) bookmark.collection = collection;
+    if (imageUrl !== undefined) bookmark.imageUrl = imageUrl;
 
     await bookmark.save(); // triggers pre('validate') hook
 
@@ -231,6 +233,27 @@ const getTags = async (req, res) => {
   }
 };
 
+// GET /api/bookmarks/collections — all collections grouped and counted
+const getCollections = async (req, res) => {
+  try {
+    const userId = new mongoose.Types.ObjectId(req.user.id);
+    const collections = await Bookmark.aggregate([
+      { $match: { user: userId, collection: { $ne: null, $ne: '' } } },
+      {
+        $group: {
+          _id: '$collection',
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { count: -1, _id: 1 } },
+    ]);
+    res.status(200).json({ data: collections });
+  } catch (err) {
+    console.error('getCollections error:', err);
+    res.status(500).json({ message: 'Server error while fetching collections' });
+  }
+};
+
 module.exports = {
   createBookmark,
   getBookmarks,
@@ -240,4 +263,5 @@ module.exports = {
   getGrouped,
   getByTag,
   getTags,
+  getCollections,
 };

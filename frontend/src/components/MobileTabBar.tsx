@@ -21,7 +21,7 @@ export default function MobileTabBar({ onOpenAdd }: MobileTabBarProps) {
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 flex h-[60px] items-center border-t border-line bg-surface px-2 shadow-[0_-4px_20px_rgba(0,0,0,0.02)]">
       <NavLink
-        to="/"
+        to="/library"
         end
         className={({ isActive }) =>
           cx(tabBase, isActive ? 'text-accent' : 'text-muted hover:text-ink')

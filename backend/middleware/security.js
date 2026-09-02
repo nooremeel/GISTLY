@@ -44,7 +44,9 @@ function mongoSanitize(req, res, next) {
 }
 
 function applySecurityMiddleware(app) {
-  app.use(helmet());
+  app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+  }));
   app.use(cors(corsOptions));
   app.use(mongoSanitize);
 }

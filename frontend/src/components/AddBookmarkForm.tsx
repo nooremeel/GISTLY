@@ -1,7 +1,9 @@
-import { useState } from 'react';
-import { apiClient } from '../api/client';
+import { useState, useEffect, useRef } from 'react';
+import { Image as ImageIcon, X } from 'lucide-react';
+import { apiClient, getImageUrl } from '../api/client';
 import { useToast } from '../context/ToastContext';
 import { Input } from './Input';
+import { AutocompleteInput } from './AutocompleteInput';
 import { Textarea } from './Textarea';
 import { Button } from './Button';
 import type { Bookmark } from '../types/bookmark';
@@ -26,8 +28,9 @@ const initialForm = {
   title: '',
   url: '',
   note: '',
-  tags: '',
+  tags: [] as string[],
   collection: '',
+  imageUrl: '',
 };
 
 export interface AddBookmarkFormProps {
@@ -69,13 +72,51 @@ export default function AddBookmarkForm({ onProcessing, onCreated }: AddBookmark
   const [form, setForm] = useState(initialForm);
   const [isLoading, setIsLoading] = useState(false);
   const [fieldError, setFieldError] = useState(false);
+  const [availableTags, setAvailableTags] = useState<string[]>([]);
+  const [availableCollections, setAvailableCollections] = useState<string[]>([]);
   const { showToast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  useEffect(() => {
+    apiClient.get('/api/bookmarks/tags').then((res: any) => {
+      setAvailableTags(res.data.map((t: any) => t._id));
+    }).catch(() => {});
+
+    apiClient.get('/api/bookmarks/collections').then((res: any) => {
+      setAvailableCollections(res.data.map((c: any) => c._id));
+    }).catch(() => {});
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleAutocompleteChange = (name: string, value: any) => {
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    setIsUploading(true);
+    try {
+      const res: any = await apiClient.postFormData('/api/uploads', formData);
+      setForm((prev) => ({ ...prev, imageUrl: res.url }));
+      showToast('Image uploaded', 'success');
+    } catch (err) {
+      showToast(getErrorMessage(err, 'Failed to upload image'), 'error');
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -89,7 +130,6 @@ export default function AddBookmarkForm({ onProcessing, onCreated }: AddBookmark
     setFieldError(false);
 
     const parsedTags = form.tags
-      .split(',')
       .map((t) => t.trim())
       .filter(Boolean);
 
@@ -108,6 +148,7 @@ export default function AddBookmarkForm({ onProcessing, onCreated }: AddBookmark
       url: finalUrl || undefined,
       tags: parsedTags,
       collection: form.collection.trim() || 'Uncategorized',
+      imageUrl: form.imageUrl || undefined,
       createdAt: new Date().toISOString(),
     };
     onProcessing?.(processingBookmark);
@@ -124,6 +165,7 @@ export default function AddBookmarkForm({ onProcessing, onCreated }: AddBookmark
         note: form.note.trim(),   // note is in the payload but not in ProcessingCard
         collection: processingBookmark.collection,
         tags: parsedTags,
+        imageUrl: form.imageUrl || undefined,
       })) as Bookmark;
 
       // Step 3 — swap: replace the ProcessingCard with the real card.
@@ -216,27 +258,84 @@ export default function AddBookmarkForm({ onProcessing, onCreated }: AddBookmark
           error={fieldError ? 'Please provide a URL or a note.' : undefined}
         />
 
-        <Input
+        <AutocompleteInput
           label="Tags"
           name="tags"
           id="tags"
-          type="text"
+          options={availableTags}
+          multiple
           value={form.tags}
-          onChange={handleChange}
-          placeholder="design, frontend, reference  (comma-separated)"
+          onChange={(val) => handleAutocompleteChange('tags', val)}
+          placeholder="design, frontend (press Enter)"
           disabled={isLoading}
         />
 
-        <Input
+        <AutocompleteInput
           label="Collection"
           name="collection"
           id="collection"
-          type="text"
+          options={availableCollections}
           value={form.collection}
-          onChange={handleChange}
+          onChange={(val) => handleAutocompleteChange('collection', val)}
           placeholder="Work, Personal, Reading List…"
           disabled={isLoading}
         />
+
+        <div className="flex flex-col gap-2">
+          <label className="text-small font-semibold text-ink">Cover Image (Optional)</label>
+          <div className="flex gap-2">
+            <Input
+              name="imageUrl"
+              placeholder="Paste image URL..."
+              value={form.imageUrl}
+              onChange={handleChange}
+              disabled={isLoading || isUploading}
+              wrapperClassName="flex-1"
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              className="shrink-0 gap-2"
+              onClick={() => fileInputRef.current?.click()}
+              loading={isUploading}
+              disabled={isLoading}
+            >
+              <ImageIcon className="size-4 text-muted" />
+              Upload
+            </Button>
+          </div>
+          {form.imageUrl && (
+            <div className="relative inline-block w-max mt-2">
+              <img 
+                src={getImageUrl(form.imageUrl)} 
+                alt="Cover preview" 
+                className="h-24 w-40 object-cover rounded-md border border-line"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+                onLoad={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'block';
+                }}
+              />
+              <button
+                type="button"
+                className="absolute -top-2 -right-2 rounded-full bg-surface p-1 border border-line shadow-sm hover:bg-paper"
+                onClick={() => setForm(prev => ({ ...prev, imageUrl: '' }))}
+                title="Remove image"
+              >
+                <X className="size-3 text-muted" />
+              </button>
+            </div>
+          )}
+          <input
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            onChange={handleImageUpload}
+            className="hidden"
+            disabled={isLoading || isUploading}
+          />
+        </div>
       </div>
 
       {/*

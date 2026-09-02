@@ -3,6 +3,12 @@ import { Button } from './Button';
 
 export interface EmptyStateProps {
   variant: 'library' | 'search' | 'tag' | 'collection';
+  /**
+   * Callback for the "Add your first bookmark" button shown on the
+   * `library` variant. Replaces the old DOM scroll-to-form approach —
+   * the inline form no longer exists; the caller now opens the modal.
+   */
+  onAdd?: () => void;
 }
 
 const CONTENT = {
@@ -24,17 +30,8 @@ const CONTENT = {
   },
 };
 
-export default function EmptyState({ variant }: EmptyStateProps) {
+export default function EmptyState({ variant, onAdd }: EmptyStateProps) {
   const content = CONTENT[variant];
-
-  const handleAddBookmark = () => {
-    document.getElementById('add-bookmark')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    
-    // Attempt to focus the URL input after scrolling
-    setTimeout(() => {
-      document.getElementById('bookmark-url')?.focus();
-    }, 300);
-  };
 
   return (
     <div className="animate-fade-in flex flex-col items-center justify-center py-16 sm:py-24 gap-4 text-center px-6">
@@ -47,9 +44,9 @@ export default function EmptyState({ variant }: EmptyStateProps) {
         </p>
       </div>
       
-      {variant === 'library' && (
+      {variant === 'library' && onAdd && (
         <div className="mt-4">
-          <Button variant="primary" onClick={handleAddBookmark}>
+          <Button variant="primary" onClick={onAdd}>
             <Plus className="size-4" aria-hidden="true" />
             Add your first bookmark
           </Button>

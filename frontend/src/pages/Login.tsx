@@ -19,7 +19,7 @@ export default function Login() {
         setSubmitting(true);
         try {
             await login(email, password);
-            navigate('/');
+            navigate('/library');
         } catch (err: any) {
             let message;
             if (err.status === 429) {

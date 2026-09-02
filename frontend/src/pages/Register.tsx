@@ -12,14 +12,21 @@ export default function Register() {
     const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
+        
+        if (password !== confirmPassword) {
+            showToast('Passwords do not match.', 'error');
+            return;
+        }
+        
         setSubmitting(true);
         try {
             await register(email, password);
-            navigate('/');
+            navigate('/library');
         } catch (err: any) {
             let message;
             if (err.status === 409) {
@@ -62,6 +69,15 @@ export default function Register() {
                         label="Password"
                         value={password}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+                        required
+                        minLength={6}
+                    />
+                    <Input
+                        id="confirmPassword"
+                        type="password"
+                        label="Repeat Password"
+                        value={confirmPassword}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConfirmPassword(e.target.value)}
                         required
                         minLength={6}
                     />

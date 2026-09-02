@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { Pencil, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { apiClient } from '../api/client';
+import { apiClient, getImageUrl } from '../api/client';
 import { useToast } from '../context/ToastContext';
 import { cx } from '../lib/cx';
 import { Button } from './Button';
@@ -187,6 +187,12 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, animateGist
       </div>
 
       <h3 className="mt-1 text-h3 font-semibold text-ink">{headline}</h3>
+
+      {bookmark.imageUrl && (
+        <div className="mt-4 mb-2 overflow-hidden rounded-md border border-line max-h-64 flex bg-paper">
+          <img src={getImageUrl(bookmark.imageUrl)} alt="Cover" className="w-full object-cover" />
+        </div>
+      )}
 
       <Gist summary={bookmark.summary} animate={animateGist} />
 

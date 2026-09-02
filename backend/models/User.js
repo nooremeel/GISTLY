@@ -16,6 +16,10 @@ const userSchema = new mongoose.Schema(
       minlength: 6,
       select: false, // never return password by default on queries
     },
+    profilePicture: {
+      type: String,
+      trim: true,
+    },
   },
   { timestamps: true }
 );
