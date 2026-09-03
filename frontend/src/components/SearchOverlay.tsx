@@ -36,8 +36,9 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
       setSearchTerm('');
       setResults([]);
       previousFocusRef.current = document.activeElement as HTMLElement | null;
-      // Focus input immediately when opened
-      setTimeout(() => inputRef.current?.focus(), 10);
+      // Use rAF instead of a magic setTimeout — waits for the panel to be
+      // painted before moving focus, which is more reliable across devices.
+      requestAnimationFrame(() => inputRef.current?.focus());
     } else {
       // Restore focus on close
       previousFocusRef.current?.focus();
@@ -190,13 +191,13 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                 }
                 const title = bookmark.title || domain || bookmark.url || 'Untitled bookmark';
                 
+                const hasUrl = Boolean(bookmark.url);
+                const ResultTag = hasUrl ? 'a' : 'div';
                 return (
-                  <a
+                  <ResultTag
                     key={bookmark._id}
-                    href={bookmark.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="animate-fade-in flex items-center justify-between px-6 py-3 hover:bg-accent-subtle focus-visible:bg-accent-subtle focus-visible:outline-none transition-colors group"
+                    {...(hasUrl ? { href: bookmark.url, target: '_blank', rel: 'noopener noreferrer' } : {})}
+                    className="animate-fade-in flex items-center justify-between px-6 py-3 hover:bg-accent-subtle focus-visible:bg-accent-subtle focus-visible:outline-none transition-colors group cursor-pointer"
                   >
                     <div className="flex flex-col min-w-0 pr-4">
                       <span className="text-body font-medium text-ink truncate group-hover:text-accent group-focus-visible:text-accent transition-colors">
@@ -208,8 +209,10 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                         </span>
                       )}
                     </div>
-                    <ExternalLink className="size-4 text-muted opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity shrink-0" aria-hidden="true" />
-                  </a>
+                    {hasUrl && (
+                      <ExternalLink className="size-4 text-muted opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity shrink-0" aria-hidden="true" />
+                    )}
+                  </ResultTag>
                 );
               })}
             </div>

@@ -30,19 +30,7 @@ export interface ProcessingCardProps {
   bookmark: ProcessingBookmark;
 }
 
-/** Best-effort domain extraction — same logic as `BookmarkCard.tsx`
- *  (duplicated intentionally rather than sharing, since `BookmarkCard`'s
- *  helper is a private module-level function, not a shared export; Task 10
- *  can decide if it's worth extracting to a shared util at that point). */
-function getDomain(url: string | undefined): string | null {
-  if (!url) return null;
-  try {
-    const parsed = new URL(url.includes('://') ? url : `https://${url}`);
-    return parsed.hostname.replace(/^www\./, '');
-  } catch {
-    return null;
-  }
-}
+import { getDomain } from '../lib/url';
 
 /**
  * "Processing" card variant (design system §16 / Task 6). Shown while

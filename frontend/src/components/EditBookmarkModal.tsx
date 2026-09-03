@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Image as ImageIcon, X } from 'lucide-react';
 import { apiClient, getImageUrl } from '../api/client';
@@ -10,14 +10,8 @@ import { Button } from './Button';
 import type { Bookmark } from '../types/bookmark';
 
 
-/** Narrows an unknown catch binding to the apiClient's `.status` number. */
-function getErrorStatus(err: unknown): number | undefined {
-  if (err && typeof err === 'object' && 'status' in err) {
-    const s = (err as { status?: unknown }).status;
-    return typeof s === 'number' ? s : undefined;
-  }
-  return undefined;
-}
+import { getErrorStatus } from '../lib/errors';
+
 
 /** All focusable element types we trap Tab within. */
 const FOCUSABLE_SELECTORS = [
@@ -98,19 +92,30 @@ export default function EditBookmarkModal({
 
   /** Ref for the panel <div> — used for both ARIA wiring and focus trap. */
   const panelRef = useRef<HTMLDivElement>(null);
+  const mouseDownTarget = useRef<EventTarget | null>(null);
 
   /** Stable heading id for aria-labelledby. */
   const TITLE_ID = 'edit-modal-title';
 
   // ─── Close + focus-return ─────────────────────────────────────────────────
   /**
-   * Every close path (Escape, scrim click, Cancel button) calls this so
+   * Every close path (Escape, backdrop click, Cancel button, X button) calls this so
    * focus always returns to the trigger — never leaves the user stranded
    * on <body> (§18 / §22). Defined before useEffect callbacks that reference it.
    */
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     triggerRef?.current?.focus();
     onClose();
+  }, [triggerRef, onClose]);
+
+  const handleBackdropMouseDown = (e: React.MouseEvent) => {
+    mouseDownTarget.current = e.target;
+  };
+
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget && mouseDownTarget.current === e.currentTarget) {
+      handleClose();
+    }
   };
 
   // ─── Accessibility: close on Escape ──────────────────────────────────────
@@ -123,7 +128,7 @@ export default function EditBookmarkModal({
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  });
+  }, [handleClose]);
 
   // ─── Accessibility: focus first field on mount ────────────────────────────
   useEffect(() => {
@@ -235,38 +240,60 @@ export default function EditBookmarkModal({
   return createPortal(
     <>
       <div
-        className="fixed inset-0 z-40 bg-ink/40 animate-modal-scrim"
-        onClick={handleClose}
+        className="fixed inset-0 z-40 bg-ink/40 backdrop-blur-sm animate-modal-scrim"
         aria-hidden="true"
       />
 
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-0 md:p-4 pb-0 flex-col">
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center p-0 md:p-4 flex-col"
+        onMouseDown={handleBackdropMouseDown}
+        onClick={handleBackdropClick}
+      >
         <div
           ref={panelRef}
           role="dialog"
           aria-modal="true"
           aria-labelledby={TITLE_ID}
           className={[
-            'relative w-full bg-surface shadow-lg',
-            'md:rounded-lg md:max-w-md',
-            'rounded-t-lg max-h-[90vh] overflow-y-auto',
-            'mt-auto md:mt-0 p-6 flex flex-col gap-6 border border-line',
-            'animate-sheet-enter md:animate-modal-panel'
+            'relative w-full bg-surface border border-line shadow-lg',
+            'md:rounded-xl md:max-w-lg',
+            'rounded-t-[20px] max-h-[90vh] flex flex-col overflow-hidden',
+            'mt-auto md:mt-0 animate-sheet-enter md:animate-modal-panel'
           ].join(' ')}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="md:hidden w-12 h-1.5 bg-line rounded-full mx-auto mb-2 shrink-0" />
-          <h3 id={TITLE_ID} className="text-h3 font-semibold text-ink">
-            Edit Bookmark
-          </h3>
-        <form
-          id="edit-bookmark-form"
-          onSubmit={handleSubmit}
-          className="w-full grid gap-x-4 gap-y-3"
-          style={{ gridTemplateColumns: 'max-content 1fr' }}
-          noValidate
-          aria-label="Edit bookmark details"
-        >
+          {/* Mobile drag handle */}
+          <div className="md:hidden w-12 h-1.5 bg-line rounded-full mx-auto mt-3 mb-1 shrink-0" />
+
+          {/* Header with Title & X close button */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-line shrink-0 bg-surface">
+            <h3 id={TITLE_ID} className="text-h3 font-semibold text-ink">
+              Edit Bookmark
+            </h3>
+            <Button
+              variant="ghost"
+              size="compact"
+              onClick={handleClose}
+              aria-label="Close edit bookmark dialog"
+              className="!p-0 size-8 rounded-full flex items-center justify-center text-muted hover:text-ink hover:bg-paper transition-colors"
+            >
+              <X className="size-4" aria-hidden="true" />
+            </Button>
+          </div>
+
+          <form
+            id="edit-bookmark-form"
+            onSubmit={handleSubmit}
+            className="flex flex-col flex-1 overflow-hidden"
+            noValidate
+            aria-label="Edit bookmark details"
+          >
+            {/* Scrollable form body */}
+            <div className="flex-1 overflow-y-auto px-6 py-5 custom-scrollbar overscroll-contain">
+              <div
+                className="w-full grid gap-x-4 gap-y-3"
+                style={{ gridTemplateColumns: 'max-content 1fr' }}
+              >
           <label
             htmlFor="edit-title"
             className="self-center text-right text-small font-semibold text-ink"
@@ -411,40 +438,34 @@ export default function EditBookmarkModal({
               disabled={saving || isUploading}
             />
           </div>
-
-          {/*
-            Footer — right-aligned per §18 ("Footer actions: right-aligned,
-            Secondary (Cancel) + Primary (Save)").
-
-            Rendered inside the <form> to avoid a React synthetic event bug 
-            where onSubmit fails to fire for submit buttons placed outside 
-            portalled forms. `col-span-2` makes it span the full grid width.
-
-            Saving is a non-AI action: plain disabled state + text swap per §16.
-            The `loading` prop (Gist-mark pulse) is reserved for AI-triggering
-            actions only (Add Bookmark). This is §16's explicit distinction.
-          */}
-          <div className="col-span-2 flex items-center justify-end gap-3 mt-2">
-            <Button
-              type="button"
-              variant="secondary"
-              disabled={saving}
-              onClick={handleClose}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              disabled={saving}
-            >
-              {saving ? 'Saving…' : 'Save'}
-            </Button>
-          </div>
-        </form>
         </div>
       </div>
-    </>,
-    document.body
-  );
+
+      {/*
+        Footer — pinned at bottom with border-t separator.
+        Rendered inside <form> so submit works reliably.
+      */}
+      <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-line shrink-0 bg-surface">
+        <Button
+          type="button"
+          variant="secondary"
+          disabled={saving}
+          onClick={handleClose}
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          variant="primary"
+          disabled={saving}
+        >
+          {saving ? 'Saving…' : 'Save'}
+        </Button>
+      </div>
+    </form>
+  </div>
+</div>
+</>,
+document.body
+);
 }

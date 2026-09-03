@@ -1,24 +1,6 @@
 @import "tailwindcss";
 
-/*
-  Tailwind v4 config lives in CSS, not tailwind.config.js.
 
-  INCIDENT NOTE (Task 0 regression, now fixed): an earlier pass replaced
-  this whole file from the design-system spec alone instead of editing the
-  real file — deleting the body/#root layout, the h1/h2/p/code base styles,
-  the temporary input/textarea/select/button placeholder block (needed
-  until Task 2 ships real primitives), and every original --text/--bg/
-  --text-h/--border/--code-bg/--accent/--accent-bg/--accent-border/
-  --social-bg/--shadow/--sans/--heading/--mono variable — which broke
-  anything elsewhere in the app referencing them. A second attempt at the
-  fix then introduced new tokens as self-referencing variables
-  (`--color-ink: var(--color-ink)`), which is invalid CSS (a variable
-  defined in terms of itself resolves to nothing) — same failure mode,
-  narrower blast radius. This version fixes both: nothing pre-existing is
-  removed, and every new token aliases to a *distinctly-named* underlying
-  variable, exactly like the original --color-text: var(--text) pattern
-  already established below.
-*/
 @theme inline {
   /* Original mappings — byte-for-byte unchanged. */
   --color-text: var(--text);
@@ -266,41 +248,7 @@ code {
   background: var(--code-bg);
 }
 
-/*
-  TEMPORARY placeholder styling for plain <input>/<textarea>/<button>/<select>
-  elements across the app (Login, Register, AddBookmarkForm,
-  SearchBar, etc). None of these elements have CSS classes on them yet — they
-  relied entirely on the browser's built-in default appearance (a border, a
-  background, some padding). Tailwind's Preflight reset intentionally strips
-  that default browser styling so nothing fights with utility classes later,
-  which is why they went invisible after Task setup.
-
-  This block just restores a visible border/background/padding using the same
-  CSS variables as the rest of the app, so forms are usable in the meantime.
-  DELETE this block once every raw input/textarea/select/button in the app has
-  been migrated to the real Button.tsx/Input.tsx/Textarea.tsx primitives
-  (Task 2 shipped the primitives themselves; AddBookmarkForm was migrated in
-  Task 7, EditBookmarkModal in Task 8; remaining unmigrated forms — Login,
-  Register, SearchBar — get wired up in their own later tasks, so this stays
-  in place until then).
-
-  FIX (Task 2, cascade-layers bug): this block must live inside `@layer base`.
-  Tailwind v4 emits all of its utility classes inside CSS cascade layers
-  (`@layer theme, base, components, utilities`). Per the cascade-layers spec,
-  *unlayered* CSS always wins over *any* layered CSS, regardless of selector
-  specificity. This block was originally unlayered plain CSS, which meant it
-  silently beat every Tailwind utility class applied to a real <button>/
-  <input>/<textarea> element — including the ones on Task 2's new primitives
-  (confirmed empirically: Button's `bg-ink`/`bg-accent`/etc. utility classes
-  were being overridden by this rule's `background: var(--code-bg)`, even
-  though the utility class has higher specificity — the layer, not the
-  specificity, decided it). Wrapping it in `@layer base` restores the correct
-  order: Tailwind's `utilities` layer now correctly beats this `base`-layer
-  rule, so primitives render per spec while any as-yet-unmigrated raw element
-  elsewhere in the app keeps this same stopgap look, unchanged.
-*/
 @layer base {
-
   input,
   textarea,
   select {
@@ -698,3 +646,32 @@ code {
     }
   }
 }
+
+/*
+  Custom scrollbar utility for modals and scrollable panels.
+  Replaces chunky native OS scrollbars with a subtle, refined track and thumb.
+*/
+@layer utilities {
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 9999px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--faint);
+  }
+}

@@ -3,7 +3,15 @@ const mongoose = require('mongoose');
 const Bookmark = require('../models/Bookmark');
 const { generateSummaryAndTags } = require('../services/aiService');
 
-const toTitleCase = (str) => {
+/**
+ * Capitalise the first character of a string and lowercase the rest.
+ * Used to normalise tags so "machine learning" → "Machine learning",
+ * preventing case-variant duplicates like "AI" / "Ai" / "ai".
+ *
+ * (Previously named `toTitleCase`, which was misleading — title-case
+ *  capitalises every word; this only capitalises the first character.)
+ */
+const capitalizeFirst = (str) => {
   if (!str) return '';
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 };
@@ -17,12 +25,12 @@ const createBookmark = async (req, res) => {
     const mergedTags = [...userTags, ...aiTags]
       .map((t) => t.trim())
       .filter(Boolean)
-      .map(toTitleCase)
+      .map(capitalizeFirst)
       .filter((t, i, arr) => arr.indexOf(t) === i);
-      
+
     const finalTitle = title || fetchedTitle || '';
     const finalImageUrl = imageUrl || fetchedImage || '';
-    
+
     const bookmark = await Bookmark.create({
       user: req.user.id,
       title: finalTitle,
@@ -36,7 +44,6 @@ const createBookmark = async (req, res) => {
 
     res.status(201).json(bookmark);
   } catch (err) {
-
     if (err.name === 'ValidationError') {
       return res.status(400).json({ message: err.message });
     }
@@ -54,11 +61,24 @@ const getBookmarks = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const filter = { user: req.user.id };
-    
+
+    if (req.query.collection) {
+      filter.collection = req.query.collection;
+    }
+
+    if (req.query.tag) {
+      const escapedTag = req.query.tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      filter.tags = { $regex: new RegExp(`^${escapedTag}$`, 'i') };
+    }
+
     if (req.query.search) {
-      const searchRegex = new RegExp(req.query.search, 'i');
+      // Escape special regex characters from user input before building the
+      // RegExp — an unescaped pattern like "((()" would throw and crash the route.
+      const escaped = req.query.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const searchRegex = new RegExp(escaped, 'i');
       filter.$or = [
         { title: searchRegex },
+        { summary: searchRegex },
         { note: searchRegex },
         { url: searchRegex },
         { tags: searchRegex },
@@ -128,7 +148,7 @@ const updateBookmark = async (req, res) => {
       bookmark.tags = tags
         .map((t) => t.trim())
         .filter(Boolean)
-        .map(toTitleCase)
+        .map(capitalizeFirst)
         .filter((t, i, arr) => arr.indexOf(t) === i);
     }
     if (collection !== undefined) bookmark.collection = collection;
@@ -171,6 +191,9 @@ const deleteBookmark = async (req, res) => {
 };
 
 // GET /api/bookmarks/grouped — bookmarks grouped by collection/folder
+// NOTE: this endpoint sends partial data (no full documents pushed).
+// The Sidebar now uses /collections which is lighter — this endpoint
+// remains available for other consumers.
 const getGrouped = async (req, res) => {
   try {
     const userId = new mongoose.Types.ObjectId(req.user.id);
@@ -181,7 +204,6 @@ const getGrouped = async (req, res) => {
         $group: {
           _id: '$collection',
           count: { $sum: 1 },
-          bookmarks: { $push: '$$ROOT' },
         },
       },
       { $sort: { _id: 1 } },

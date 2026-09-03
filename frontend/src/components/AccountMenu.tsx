@@ -1,22 +1,16 @@
 // frontend/src/components/AccountMenu.tsx
 import { useEffect, useRef, useState } from 'react';
-import { ChevronDown, LogOut, User, Image as ImageIcon } from 'lucide-react';
+import { ChevronDown, LogOut, Image as ImageIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { cx } from '../lib/cx';
 import { apiClient, getImageUrl } from '../api/client';
 
-interface AuthContextValue {
-    user: { email?: string; profilePicture?: string } | null;
-    logout: () => Promise<void>;
-    updateProfile: (data: any) => Promise<void>;
-}
-
 export default function AccountMenu({ variant = 'header' }: { variant?: 'header' | 'tab' }) {
 
-    const { user, logout, updateProfile } = useAuth() as AuthContextValue;
+    const { user, logout, updateProfile } = useAuth();
 
-    const { showToast } = useToast() as { showToast: (message: string, type?: string) => void };
+    const { showToast } = useToast();
     const [open, setOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
     const triggerRef = useRef<HTMLButtonElement>(null);
@@ -39,10 +33,10 @@ export default function AccountMenu({ variant = 'header' }: { variant?: 'header'
             }
         }
 
-        document.addEventListener('mousedown', handlePointerDown);
+        document.addEventListener('pointerdown', handlePointerDown);
         document.addEventListener('keydown', handleKeyDown);
         return () => {
-            document.removeEventListener('mousedown', handlePointerDown);
+            document.removeEventListener('pointerdown', handlePointerDown);
             document.removeEventListener('keydown', handleKeyDown);
         };
     }, [open]);
@@ -67,7 +61,7 @@ export default function AccountMenu({ variant = 'header' }: { variant?: 'header'
 
         setIsUploading(true);
         try {
-            const res: any = await apiClient.postFormData('/api/uploads', formData);
+            const res = await apiClient.postFormData<{ url: string }>('/api/uploads', formData);
             await updateProfile({ profilePicture: res.url });
             showToast('Profile picture updated', 'success');
         } catch (err) {

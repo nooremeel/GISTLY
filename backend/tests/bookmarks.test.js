@@ -33,7 +33,7 @@ describe('Bookmark routes', () => {
     expect(res.status).toBe(201);
     expect(generateSummaryAndTags).toHaveBeenCalled();
     expect(res.body.summary).toBe('Mocked summary text.');
-    expect(res.body.tags).toEqual(expect.arrayContaining(['mocked-tag', 'user-tag']));
+    expect(res.body.tags).toEqual(expect.arrayContaining(['Mocked-tag', 'User-tag']));
   });
 
   test('User B cannot GET/PUT/DELETE a bookmark owned by User A', async () => {

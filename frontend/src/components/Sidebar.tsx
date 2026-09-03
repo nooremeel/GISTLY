@@ -75,7 +75,7 @@ export default function Sidebar() {
   useEffect(() => {
     async function fetchCollections() {
       try {
-        const res = (await apiClient.get('/api/bookmarks/grouped')) as { data: CollectionGroup[] };
+        const res = (await apiClient.get('/api/bookmarks/collections')) as { data: CollectionGroup[] };
         setCollections(res.data);
       } catch (err) {
         console.error('Failed to fetch collections', err);

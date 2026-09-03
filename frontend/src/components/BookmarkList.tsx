@@ -43,6 +43,8 @@ type BookmarkItem = (Bookmark & { _processing?: false; _animateGist?: boolean })
 export interface BookmarkListHandle {
   addBookmark: (bookmark: ProcessingBookmark) => void;
   replaceBookmark: (tempId: string, real: Bookmark & { _animateGist?: boolean }) => void;
+  /** Removes a ProcessingCard that failed to resolve (API error, rate limit, etc). */
+  removeBookmark: (tempId: string) => void;
 }
 
 const LIMIT = 12;
@@ -102,6 +104,9 @@ const BookmarkList = forwardRef<BookmarkListHandle, { onAdd?: () => void }>(
             b._id === tempId ? { ...real, _processing: false } : b
           )
         );
+      },
+      removeBookmark: (tempId: string) => {
+        setBookmarks((prev) => prev.filter((b) => b._id !== tempId));
       },
     }));
 
@@ -198,6 +203,8 @@ const BookmarkList = forwardRef<BookmarkListHandle, { onAdd?: () => void }>(
             aria-busy="true"
             aria-label="Loading your bookmarks"
           >
+            <BookmarkCardSkeleton />
+            <BookmarkCardSkeleton />
             <BookmarkCardSkeleton />
           </div>
         ) : (

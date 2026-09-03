@@ -10,19 +10,7 @@ import type { Bookmark } from '../types/bookmark';
 import type { ProcessingBookmark } from './ProcessingCard';
 
 
-/** Extracts the error status from an unknown catch binding,
- *  matching the apiClient's `err.status` convention. */
-function getErrorStatus(err: unknown): number | undefined {
-  if (err && typeof err === 'object' && 'status' in err) {
-    const s = (err as { status?: unknown }).status;
-    return typeof s === 'number' ? s : undefined;
-  }
-  return undefined;
-}
-
-function getErrorMessage(err: unknown, fallback: string): string {
-  return err instanceof Error && err.message ? err.message : fallback;
-}
+import { getErrorStatus, getErrorMessage } from '../lib/errors';
 
 const initialForm = {
   title: '',
@@ -47,6 +35,12 @@ export interface AddBookmarkFormProps {
    * Task 5's Gist entrance animation on swap).
    */
   onCreated?: (bookmark: Bookmark & { _tempId: string; _animateGist: boolean }) => void;
+  /**
+   * Called when the API call fails, with the temp ID that was passed
+   * to `onProcessing`. The caller should remove the stuck ProcessingCard
+   * rather than leaving it in a permanent "Saving…" state.
+   */
+  onFailed?: (tempId: string) => void;
 }
 
 /**
@@ -68,7 +62,7 @@ export interface AddBookmarkFormProps {
  *   - `summary: null` is not an error; the real card just renders without
  *     a Gist block if the AI failed quietly.
  */
-export default function AddBookmarkForm({ onProcessing, onCreated }: AddBookmarkFormProps) {
+export default function AddBookmarkForm({ onProcessing, onCreated, onFailed }: AddBookmarkFormProps) {
   const [form, setForm] = useState(initialForm);
   const [isLoading, setIsLoading] = useState(false);
   const [fieldError, setFieldError] = useState(false);
@@ -153,7 +147,8 @@ export default function AddBookmarkForm({ onProcessing, onCreated }: AddBookmark
     };
     onProcessing?.(processingBookmark);
 
-    // Clear the form right away — the card in the list is the feedback.
+    // Save snapshot of current form data so we can restore it if the request fails
+    const submittedForm = { ...form };
     setForm(initialForm);
     setIsLoading(true);
 
@@ -162,10 +157,10 @@ export default function AddBookmarkForm({ onProcessing, onCreated }: AddBookmark
       const bookmark = (await apiClient.post('/api/bookmarks', {
         title: processingBookmark.title,
         url: finalUrl || undefined,
-        note: form.note.trim(),   // note is in the payload but not in ProcessingCard
+        note: submittedForm.note.trim(),
         collection: processingBookmark.collection,
         tags: parsedTags,
-        imageUrl: form.imageUrl || undefined,
+        imageUrl: submittedForm.imageUrl || undefined,
       })) as Bookmark;
 
       // Step 3 — swap: replace the ProcessingCard with the real card.
@@ -174,21 +169,16 @@ export default function AddBookmarkForm({ onProcessing, onCreated }: AddBookmark
       onCreated?.({ ...bookmark, _tempId: tempId, _animateGist: true });
       showToast('Bookmark added!', 'success');
     } catch (err) {
-      // On API failure: remove the optimistic ProcessingCard by replacing
-      // it with nothing — caller's replaceBookmark with null would work,
-      // but the simplest approach is a toast + leave the card; the user
-      // can delete it. Actually, cleaner: we signal failure by calling
-      // onCreated with a "failed" bookmark — but that couples too much.
-      // Decision: on failure, show a toast and leave the ProcessingCard
-      // in the list. The user sees it's stuck and can delete it.
-      // Task 14 (Error States) can revisit this with a proper error card.
+      // On API failure: remove the optimistic ProcessingCard and restore user input
+      onFailed?.(tempId);
+      setForm(submittedForm);
       if (getErrorStatus(err) === 429) {
         showToast(
           "You've hit the hourly limit for adding bookmarks. Try again later.",
           'error'
         );
       } else {
-        showToast(getErrorMessage(err, 'Failed to add bookmark.'), 'error');
+        showToast(getErrorMessage(err, 'Failed to add bookmark. Draft restored.'), 'error');
       }
     } finally {
       setIsLoading(false);

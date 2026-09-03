@@ -1,4 +1,4 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { GoogleGenerativeAI, SchemaType } = require('@google/generative-ai');
 const { fetchPageData } = require('./urlFetcher');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -33,7 +33,27 @@ async function generateSummaryAndTags({ url, note, userTags = [] }) {
 
   let aiTimeoutId;
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-3.5-flash',
+      generationConfig: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: SchemaType.OBJECT,
+          properties: {
+            summary: {
+              type: SchemaType.STRING,
+            },
+            tags: {
+              type: SchemaType.ARRAY,
+              items: {
+                type: SchemaType.STRING,
+              }
+            }
+          },
+          required: ["summary", "tags"]
+        }
+      }
+    });
 
     const userTagsContext = userTags && userTags.length > 0
       ? `5. The user already added these tags: [${userTags.join(', ')}]. DO NOT output tags that are identical or highly similar to these.`
@@ -60,9 +80,6 @@ CRITICAL RULES FOR TAGS:
 ${userTagsContext}
 ${urlOnlyContext}
 
-Respond with ONLY raw JSON, no markdown fences, no preamble, in this exact shape:
-{"summary": "<2 highly specific, valuable sentences>", "tags": ["<broad_category_if_any>"]}
-
 Content:
 ${content}`;
 
@@ -77,9 +94,7 @@ ${content}`;
     clearTimeout(aiTimeoutId);
     
     const raw = result.response.text();
-    const cleaned = raw.replace(/```json|```/g, '').trim();
-
-    const parsed = JSON.parse(cleaned);
+    const parsed = JSON.parse(raw);
 
     if (typeof parsed.summary !== 'string' || !Array.isArray(parsed.tags)) {
       throw new Error('Unexpected AI response shape');

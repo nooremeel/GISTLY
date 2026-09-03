@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { Button } from './Button';
@@ -50,21 +50,35 @@ export default function AddBookmarkModal({
   onClose,
   onProcessing,
   onCreated,
+  onFailed,
 }: AddBookmarkModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
+  const mouseDownTarget = useRef<EventTarget | null>(null);
 
   /** Stable heading id for aria-labelledby. */
   const TITLE_ID = 'add-modal-title';
 
   // ─── Close + focus-return ──────────────────────────────────────────────────
   /**
-   * Every close path (Escape, scrim click, X button) goes through this so
+   * Every close path (Escape, backdrop click, X button) goes through this so
    * focus always returns to the trigger — never leaves the user stranded
    * on <body>.
    */
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     triggerRef?.current?.focus();
     onClose();
+  }, [triggerRef, onClose]);
+
+  const handleBackdropMouseDown = (e: React.MouseEvent) => {
+    mouseDownTarget.current = e.target;
+  };
+
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    // Only close if both mousedown and mouseup (click) originated directly on the backdrop container,
+    // preventing accidental closes when dragging text selections inside inputs.
+    if (e.target === e.currentTarget && mouseDownTarget.current === e.currentTarget) {
+      handleClose();
+    }
   };
 
   // ─── Accessibility: close on Escape ───────────────────────────────────────
@@ -77,7 +91,7 @@ export default function AddBookmarkModal({
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  });
+  }, [handleClose]);
 
   // ─── Accessibility: focus first field on mount ─────────────────────────────
   useEffect(() => {
@@ -123,15 +137,18 @@ export default function AddBookmarkModal({
   // ─── Render (portalled to document.body) ──────────────────────────────────
   return createPortal(
     <>
-      {/* Scrim — matches EditBookmarkModal's animate-modal-scrim */}
+      {/* Scrim — animated fade-in overlay with subtle backdrop blur */}
       <div
-        className="fixed inset-0 z-40 bg-ink/40 animate-modal-scrim"
-        onClick={handleClose}
+        className="fixed inset-0 z-40 bg-ink/40 backdrop-blur-sm animate-modal-scrim"
         aria-hidden="true"
       />
 
       {/* Panel container — centered on desktop, sheet-from-bottom on mobile */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-0 md:p-4 flex-col">
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center p-0 md:p-4 flex-col"
+        onMouseDown={handleBackdropMouseDown}
+        onClick={handleBackdropClick}
+      >
         <div
           ref={panelRef}
           role="dialog"
@@ -140,23 +157,19 @@ export default function AddBookmarkModal({
           className={[
             'relative w-full bg-surface border border-line shadow-lg',
             /* Desktop: centered panel, max-w-lg gives room for the form fields */
-            'md:rounded-lg md:max-w-lg',
+            'md:rounded-xl md:max-w-lg',
             /* Mobile: bottom sheet — slides up, rounded top corners only */
-            'rounded-t-[16px] max-h-[92vh] overflow-y-auto',
+            'rounded-t-[20px] max-h-[90vh] flex flex-col overflow-hidden',
             /* Desktop gets the scale-in modal animation; mobile keeps sheet-enter */
             'mt-auto md:mt-0 animate-sheet-enter md:animate-modal-panel',
           ].join(' ')}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Mobile drag handle — purely visual, matches the Framer Motion
-              bottom sheet in Home.tsx for a consistent language */}
-          <div className="md:hidden w-12 h-1.5 bg-line rounded-full mx-auto mt-3 mb-0 shrink-0" />
+          {/* Mobile drag handle — purely visual */}
+          <div className="md:hidden w-12 h-1.5 bg-line rounded-full mx-auto mt-3 mb-1 shrink-0" />
 
-          {/* Panel header: title + close button.
-              Using the Button primitive (not a raw <button>) so it's immune
-              to the @layer base button reset in index.css which adds unwanted
-              background/padding to all bare <button> elements. */}
-          <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-line shrink-0">
+          {/* Panel header: title + close button */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-line shrink-0 bg-surface">
             <h2
               id={TITLE_ID}
               className="text-h3 font-semibold text-ink"
@@ -168,14 +181,14 @@ export default function AddBookmarkModal({
               size="compact"
               onClick={handleClose}
               aria-label="Close add bookmark dialog"
-              className="!p-0 size-8"
+              className="!p-0 size-8 rounded-full flex items-center justify-center text-muted hover:text-ink hover:bg-paper transition-colors"
             >
               <X className="size-4" aria-hidden="true" />
             </Button>
           </div>
 
-          {/* Form body */}
-          <div className="px-6 py-5">
+          {/* Form body — scrollable independently so scrollbars don't encroach on header */}
+          <div className="px-6 py-5 overflow-y-auto overscroll-contain custom-scrollbar flex-1">
             <AddBookmarkForm
               onProcessing={(p) => {
                 onProcessing?.(p);
@@ -184,6 +197,7 @@ export default function AddBookmarkModal({
                 handleClose();
               }}
               onCreated={onCreated}
+              onFailed={onFailed}
             />
           </div>
         </div>

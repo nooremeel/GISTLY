@@ -1,22 +1,16 @@
-import { useEffect, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { apiClient } from '../api/client';
 import BookmarkList from '../components/BookmarkList';
 import { Search } from 'lucide-react';
 import { getGreeting } from '../lib/greeting';
+import { usePageTitle } from '../lib/usePageTitle';
 
 import type { AppShellContext } from '../components/AppShell';
 import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import AddBookmarkForm from '../components/AddBookmarkForm';
 
-interface HealthStatus {
-  status: string;
-  message: string;
-}
-
 export default function Home() {
-  const [health, setHealth] = useState<HealthStatus | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  usePageTitle('Library');
+
   const {
     isMobileAddOpen,
     setIsMobileAddOpen,
@@ -26,24 +20,26 @@ export default function Home() {
   } = useOutletContext<AppShellContext>();
   const dragControls = useDragControls();
 
-  useEffect(() => {
-    apiClient
-      .get('/api/health')
-      .then(setHealth)
-      .catch((err: Error) => setError(err.message));
-  }, []);
-
   return (
     <div className="flex flex-col gap-8">
       <div>
         <h1 className="text-h1">{getGreeting()}.</h1>
-        {/* Mobile Search Bar directly under heading */}
+        {/* Mobile Search Bar — needs role/keyboard support for accessibility */}
         <div className="md:hidden mt-4">
           <div
+            role="button"
+            tabIndex={0}
+            aria-label="Search your library"
             onClick={() => setIsSearchOpen(true)}
-            className="flex items-center w-full px-4 py-2.5 bg-surface border border-line rounded-md text-muted cursor-text"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setIsSearchOpen(true);
+              }
+            }}
+            className="flex items-center w-full px-4 py-2.5 bg-surface border border-line rounded-md text-muted cursor-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
-            <Search className="mr-2 size-5" />
+            <Search className="mr-2 size-5" aria-hidden="true" />
             <span className="text-small">Search your library...</span>
           </div>
         </div>
@@ -55,7 +51,7 @@ export default function Home() {
         now owned by AppShell and forwarded here via outlet context so the
         modal can drive optimistic updates from outside this page.
 
-        Mobile: Framer Motion bottom sheet (unchanged).
+        Mobile: Framer Motion bottom sheet with drag-to-dismiss.
       */}
       <AnimatePresence>
         {isMobileAddOpen && (
@@ -109,18 +105,13 @@ export default function Home() {
                 const { _tempId, ...realBookmark } = b;
                 bookmarkListRef.current?.replaceBookmark(_tempId, realBookmark);
               }}
+              onFailed={(tempId) => bookmarkListRef.current?.removeBookmark(tempId)}
             />
           </motion.section>
         )}
       </AnimatePresence>
 
       <BookmarkList ref={bookmarkListRef} onAdd={() => setIsAddOpen(true)} />
-
-      {(error || !health) && (
-        <p className="text-small text-faint">
-          {error ? `Backend error: ${error}` : 'Checking backend…'}
-        </p>
-      )}
     </div>
   );
 }

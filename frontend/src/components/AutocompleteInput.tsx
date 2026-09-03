@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { cx } from '../lib/cx';
 import { Tag } from './Tag';
 
@@ -30,32 +31,64 @@ export function AutocompleteInput({
 }: AutocompleteInputProps) {
   const [inputValue, setInputValue] = useState(multiple ? '' : (value as string));
   const [isOpen, setIsOpen] = useState(false);
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
+  
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLUListElement>(null);
 
   // Sync input value with external value if not multiple
   useEffect(() => {
     if (!multiple) {
-      setInputValue(value as string);
+      setInputValue((value as string) || '');
     }
   }, [value, multiple]);
 
   // Handle clicking outside to close dropdown
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+    const handlePointerDown = (e: PointerEvent) => {
+      const isOutsideContainer = containerRef.current && !containerRef.current.contains(e.target as Node);
+      const isOutsideDropdown = dropdownRef.current && !dropdownRef.current.contains(e.target as Node);
+      
+      if (isOutsideContainer && isOutsideDropdown) {
         setIsOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
   }, []);
 
-  const filteredOptions = options.filter(
-    (opt) =>
-      opt.toLowerCase().includes(inputValue.toLowerCase()) &&
-      (!multiple || !(value as string[]).includes(opt))
-  );
+  const updatePosition = () => {
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      setDropdownStyle({
+        position: 'fixed',
+        top: rect.bottom + 4, // 4px gap
+        left: rect.left,
+        width: rect.width,
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      updatePosition();
+      window.addEventListener('scroll', updatePosition, true);
+      window.addEventListener('resize', updatePosition);
+    }
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('resize', updatePosition);
+    };
+  }, [isOpen]);
+
+  const filteredOptions = options
+    .filter(
+      (opt) =>
+        opt.toLowerCase().includes(inputValue.toLowerCase()) &&
+        (!multiple || !(value as string[]).includes(opt))
+    )
+    .slice(0, 4);
 
   const handleSelect = (option: string) => {
     if (multiple) {
@@ -64,6 +97,7 @@ export function AutocompleteInput({
         onChange([...arr, option]);
       }
       setInputValue('');
+      setIsOpen(false);
       inputRef.current?.focus();
     } else {
       setInputValue(option);
@@ -77,7 +111,6 @@ export function AutocompleteInput({
       e.preventDefault();
       if (multiple && inputValue.trim()) {
         const val = inputValue.trim();
-        // optionally, we could select the top suggestion if any, but adding literal is fine.
         const topSuggestion = filteredOptions.find((o) => o.toLowerCase() === val.toLowerCase());
         const finalVal = topSuggestion || val;
         
@@ -86,6 +119,7 @@ export function AutocompleteInput({
           onChange([...arr, finalVal]);
         }
         setInputValue('');
+        setIsOpen(false);
       } else if (!multiple && inputValue.trim()) {
         onChange(inputValue.trim());
         setIsOpen(false);
@@ -165,18 +199,44 @@ export function AutocompleteInput({
             onChange={handleChange}
             onKeyDown={handleKeyDown}
             onFocus={() => setIsOpen(true)}
+            onBlur={(e) => {
+              // Only close if focus didn't move inside the dropdown list
+              if (dropdownRef.current?.contains(e.relatedTarget as Node)) return;
+              setIsOpen(false);
+
+              if (multiple && inputValue.trim()) {
+                const val = inputValue.trim();
+                const topSuggestion = filteredOptions.find((o) => o.toLowerCase() === val.toLowerCase());
+                const finalVal = topSuggestion || val;
+                const arr = value as string[];
+                if (!arr.includes(finalVal)) {
+                  onChange([...arr, finalVal]);
+                }
+                setInputValue('');
+              } else if (!multiple && inputValue.trim()) {
+                onChange(inputValue.trim());
+              }
+            }}
             placeholder={multiple && (value as string[]).length > 0 ? '' : placeholder}
             disabled={disabled}
             autoComplete="off"
           />
         </div>
 
-        {isOpen && filteredOptions.length > 0 && (
-          <ul className="absolute z-50 top-full left-0 right-0 mt-1 max-h-60 overflow-auto bg-surface border border-line rounded-md shadow-lg py-1">
+        {isOpen && filteredOptions.length > 0 && typeof document !== 'undefined' && createPortal(
+          <ul 
+            ref={dropdownRef}
+            className="z-[9999] max-h-40 overflow-y-auto overscroll-contain bg-surface border border-line rounded-md shadow-lg py-1 text-small"
+            style={dropdownStyle}
+          >
             {filteredOptions.map((opt) => (
               <li
                 key={opt}
-                className="px-3 py-2 text-base cursor-pointer hover:bg-accent-subtle hover:text-accent transition-colors"
+                className="px-3 py-2 cursor-pointer hover:bg-accent-subtle hover:text-accent transition-colors"
+                onMouseDown={(e) => {
+                  // Prevent input blur before click finishes
+                  e.preventDefault();
+                }}
                 onClick={(e) => {
                   e.stopPropagation();
                   handleSelect(opt);
@@ -185,7 +245,8 @@ export function AutocompleteInput({
                 {opt}
               </li>
             ))}
-          </ul>
+          </ul>,
+          document.body
         )}
       </div>
       {error && <p className="text-small text-red-500">{error}</p>}

@@ -9,9 +9,11 @@ import type { Bookmark } from '../types/bookmark';
 import { Search, Hash } from 'lucide-react';
 import { useOutletContext } from 'react-router-dom';
 import type { AppShellContext } from '../components/AppShell';
+import { usePageTitle } from '../lib/usePageTitle';
 
 export default function TagDetailView() {
   const { tag } = useParams<{ tag: string }>();
+  usePageTitle(tag ? `#${tag}` : 'Tag');
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Sparkles, Tag, FolderOpen, ArrowRight, Bookmark } from 'lucide-react';
-import { Button } from '../components/Button';
 
 /**
  * Public landing page — shown to unauthenticated visitors at `/`.
@@ -17,7 +16,7 @@ import { Button } from '../components/Button';
  *   §6  — No shadow on the demo card (border-only elevation at rest, per §9).
  */
 export default function LandingPage() {
-  const { user, loading } = useAuth() as any;
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
 
   // Silently send authenticated users to their library.
@@ -51,12 +50,18 @@ export default function LandingPage() {
           >
             Log in
           </Link>
-          <Button variant="primary" className="hidden sm:inline-flex">
-            <Link to="/register" className="flex items-center gap-1 no-underline text-inherit">
-              Get started
-              <ArrowRight className="size-4" aria-hidden="true" />
-            </Link>
-          </Button>
+          <Link
+            to="/register"
+            className={[
+              'hidden sm:inline-flex items-center justify-center gap-1 h-10 px-4 rounded-md',
+              'bg-ink text-paper font-sans text-body font-medium',
+              'hover:brightness-90 hover:shadow-sm transition-all duration-150',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-paper',
+            ].join(' ')}
+          >
+            Get started
+            <ArrowRight className="size-4" aria-hidden="true" />
+          </Link>
         </nav>
       </header>
 

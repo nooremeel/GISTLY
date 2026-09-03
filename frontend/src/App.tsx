@@ -10,6 +10,7 @@ import CollectionView from './pages/CollectionView';
 import MobileCollections from './pages/MobileCollections';
 import TagsView from './pages/TagsView';
 import TagDetailView from './pages/TagDetailView';
+import NotFound from './pages/NotFound';
 import { ToastProvider } from './context/ToastContext';
 import Toast from './components/Toast';
 
@@ -25,9 +26,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
 
-            {/* Authenticated routes — wrapped in ProtectedRoute + AppShell.
-                The library has moved from "/" to "/library" so the landing
-                page can live at "/" for unauthenticated visitors. */}
+            {/* Authenticated routes — wrapped in ProtectedRoute + AppShell. */}
             <Route element={<ProtectedRoute />}>
               <Route element={<AppShell />}>
                 <Route path="/library" element={<Home />} />
@@ -37,6 +36,9 @@ function App() {
                 <Route path="/collections/:name" element={<CollectionView />} />
               </Route>
             </Route>
+
+            {/* Catch-all — renders a 404 page for any unmatched route */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
       </BrowserRouter>

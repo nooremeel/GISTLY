@@ -49,10 +49,20 @@ bookmarkSchema.pre('validate', function (next) {
   if (!this.url && !this.note) {
     this.invalidate('url', 'Either a URL or a note is required.');
   }
-
 });
 
-// Compound index to support Task 09's tag/folder aggregation queries
+// Compound indexes for user queries, sorting, and aggregations
+bookmarkSchema.index({ user: 1, createdAt: -1 });
+bookmarkSchema.index({ user: 1, collection: 1 });
 bookmarkSchema.index({ user: 1, tags: 1 });
+
+// Full-text search index — enables efficient server-side search across
+// title, note, url, and tags without scanning the entire collection.
+// The search query in getBookmarks will be updated to $text once this
+// index is confirmed to be in place on the MongoDB instance.
+bookmarkSchema.index(
+  { title: 'text', note: 'text', url: 'text', tags: 'text' },
+  { name: 'bookmark_text_search' }
+);
 
 module.exports = mongoose.model('Bookmark', bookmarkSchema);

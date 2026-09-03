@@ -5,8 +5,10 @@ import type { TagGroup } from '../types/bookmark';
 import { Tags as TagsIcon, Hash, Search } from 'lucide-react';
 import { useOutletContext } from 'react-router-dom';
 import type { AppShellContext } from '../components/AppShell';
+import { usePageTitle } from '../lib/usePageTitle';
 
 export default function TagsView() {
+  usePageTitle('Tags');
   const { setIsSearchOpen } = useOutletContext<AppShellContext>();
   const [tags, setTags] = useState<TagGroup[]>([]);
   const [loading, setLoading] = useState(true);

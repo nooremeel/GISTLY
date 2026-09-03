@@ -25,20 +25,20 @@ function validateLogin(req, res, next) {
 }
 
 function validateBookmarkUrl(req, res, next) {
-  const { url } = req.body;
-
-  if (url === undefined || url === null || url === '') {
+  // url is optional — a bookmark can be a note-only entry.
+  if (req.body.url === undefined || req.body.url === null || req.body.url === '') {
     return next();
   }
 
-  if (!/^https?:\/\//i.test(url)) {
-    url = 'https://' + url;
-    req.body.url = url;
+  // Normalise the URL in-place on req.body so the controller always
+  // receives a fully-qualified URL (was a const-reassignment bug).
+  if (!/^https?:\/\//i.test(req.body.url)) {
+    req.body.url = 'https://' + req.body.url;
   }
 
   let parsed;
   try {
-    parsed = new URL(url);
+    parsed = new URL(req.body.url);
   } catch {
     return res.status(400).json({ success: false, message: 'Invalid URL format' });
   }

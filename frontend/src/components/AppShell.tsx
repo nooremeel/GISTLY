@@ -91,6 +91,7 @@ export default function AppShell() {
             const { _tempId, ...realBookmark } = b;
             bookmarkListRef.current?.replaceBookmark(_tempId, realBookmark);
           }}
+          onFailed={(tempId) => bookmarkListRef.current?.removeBookmark(tempId)}
         />
       )}
     </div>
