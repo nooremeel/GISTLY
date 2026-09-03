@@ -121,22 +121,4 @@ Tests run against an **in-memory MongoDB instance** — no real database, no net
 | Variable | Description |
 |---|---|
 | `VITE_API_BASE_URL` | Backend base URL (e.g. `http://localhost:5000`) |
-
----
-
-## Deployment Checklist
-
-- [ ] Set `NODE_ENV=production` on the backend — this flips auth cookies to `Secure: true`
-- [ ] Set `CLIENT_ORIGIN` to your deployed frontend's exact origin (no trailing slash)
-- [ ] Use a strong, randomly generated `JWT_SECRET` (e.g. `openssl rand -base64 64`)
-- [ ] Ensure MongoDB Atlas IP allowlist includes your backend's host
-- [ ] Configure your SMTP credentials for live email delivery
-
----
-
-## Known Limitations
-
-- Near-duplicate tags (e.g. `"Node.js"` vs `"NodeJS"`) aren't semantically deduplicated — only exact case-insensitive matches are caught.
-- Tag pills in the filter bar are derived from the currently loaded bookmarks; tags from unloaded pages won't appear until those pages are loaded.
-- No CSRF token protection — auth relies on `SameSite=Lax` cookies. Acceptable for most deployments; consider explicit CSRF tokens before handling high-value mutations at scale.
-- No CI pipeline yet — backend tests must be run manually.
+
