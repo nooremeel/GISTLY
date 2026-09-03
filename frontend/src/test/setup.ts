@@ -6,20 +6,18 @@ afterEach(() => {
   cleanup();
 });
 
-// Mock window.scrollTo
+// Polyfills and DOM environment stubs for JSDOM test execution
 Object.defineProperty(window, 'scrollTo', {
   value: vi.fn(),
   writable: true,
 });
 
-// Mock ResizeObserver
 globalThis.ResizeObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),
   disconnect: vi.fn(),
 }));
 
-// Mock IntersectionObserver
 globalThis.IntersectionObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),

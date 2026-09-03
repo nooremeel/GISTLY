@@ -29,7 +29,7 @@ describe('Auth routes', () => {
   });
 
   test('GET /me with a valid session returns the user', async () => {
-    const agent = request.agent(app); // persists cookies across requests
+    const agent = request.agent(app);
     await agent.post('/api/auth/register').send(testUser);
     await agent.post('/api/auth/login').send(testUser);
     const res = await agent.get('/api/auth/me');
@@ -97,13 +97,11 @@ describe('Auth routes', () => {
     expect(resetRes.body.success).toBe(true);
     expect(resetRes.headers['set-cookie']).toBeDefined();
 
-    // Verify user can now log in with the new password
     const loginRes = await request(app)
       .post('/api/auth/login')
       .send({ email: testUser.email, password: newPassword });
     expect(loginRes.status).toBe(200);
 
-    // Verify old password fails
     const oldLoginRes = await request(app)
       .post('/api/auth/login')
       .send({ email: testUser.email, password: testUser.password });

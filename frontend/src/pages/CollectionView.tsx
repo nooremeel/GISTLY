@@ -67,7 +67,6 @@ export default function CollectionView() {
           )}
         </div>
 
-        {/* Mobile Search Bar directly under heading */}
         <div className="md:hidden mt-4">
           <div
             role="button"

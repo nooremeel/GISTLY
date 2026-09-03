@@ -24,7 +24,6 @@ export default function Home() {
     <div className="flex flex-col gap-8">
       <div>
         <h1 className="text-h1">{getGreeting()}.</h1>
-        {/* Mobile Search Bar — needs role/keyboard support for accessibility */}
         <div className="md:hidden mt-4">
           <div
             role="button"
@@ -45,14 +44,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/*
-        Desktop: inline form removed — "Add" button in the header opens
-        AddBookmarkModal (rendered at AppShell level). bookmarkListRef is
-        now owned by AppShell and forwarded here via outlet context so the
-        modal can drive optimistic updates from outside this page.
-
-        Mobile: Framer Motion bottom sheet with drag-to-dismiss.
-      */}
       <AnimatePresence>
         {isMobileAddOpen && (
           <motion.div
@@ -77,7 +68,7 @@ export default function Home() {
             dragControls={dragControls}
             dragListener={false}
             onDragEnd={(_, info) => {
-              // Close if dragged down far enough or fast enough
+              // Dismiss bottom sheet when drag gesture exceeds distance or velocity thresholds
               if (info.offset.y > 100 || info.velocity.y > 500) {
                 setIsMobileAddOpen(false);
               }
@@ -99,7 +90,7 @@ export default function Home() {
             <AddBookmarkForm
               onProcessing={(p) => {
                 bookmarkListRef.current?.addBookmark(p);
-                setIsMobileAddOpen(false); // Close sheet on mobile after submit
+                setIsMobileAddOpen(false);
               }}
               onCreated={(b) => {
                 const { _tempId, ...realBookmark } = b;

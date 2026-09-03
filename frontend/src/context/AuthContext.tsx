@@ -2,8 +2,6 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { apiClient } from '../api/client';
 
-// ─── Types ─────────────────────────────────────────────────────────────────
-
 export interface AuthUser {
   id: string;
   email: string;
@@ -19,18 +17,13 @@ interface AuthContextValue {
   updateProfile: (data: Partial<Pick<AuthUser, 'profilePicture'>>) => Promise<AuthUser>;
 }
 
-// ─── Context ───────────────────────────────────────────────────────────────
-
 const AuthContext = createContext<AuthContextValue | null>(null);
-
-// ─── Provider ──────────────────────────────────────────────────────────────
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Restore session on mount — a successful /me call means the httpOnly
-  // cookie is still valid and we have a logged-in user.
+  // Restore session on mount — a successful /me call rehydrates state from valid httpOnly cookie
   useEffect(() => {
     apiClient
       .get<AuthUser>('/api/auth/me')
@@ -68,8 +61,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
-
-// ─── Hook ──────────────────────────────────────────────────────────────────
 
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);

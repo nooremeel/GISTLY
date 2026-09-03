@@ -1,8 +1,6 @@
 @import "tailwindcss";
 
-
 @theme inline {
-  /* Original mappings — byte-for-byte unchanged. */
   --color-text: var(--text);
   --color-text-h: var(--text-h);
   --color-bg: var(--bg);
@@ -13,10 +11,6 @@
   --color-accent-border: var(--accent-border);
   --color-social-bg: var(--social-bg);
 
-  /* New — design-system token names (gistly-design-system.md §2), Task 0.
-     Each aliases to a distinctly-named :root variable below (reusing the
-     legacy variable where the concept already existed, e.g. ink → the
-     existing --text-h holder) — never to itself. */
   --color-ink: var(--text-h);
   --color-muted: var(--text);
   --color-paper: var(--bg);
@@ -30,82 +24,46 @@
   --color-coral: var(--coral);
   --color-coral-border: var(--coral-border);
 
-  /* Radius scale (§5) — static, no dark-mode variant, so literal values
-     are fine here. Overrides Tailwind's stock sm/md/lg; radius-feature is
-     net-new. */
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 16px;
   --radius-feature: 24px;
 
-  /* Shadow scale (§6) — static, no dark-mode variant per spec. Overrides
-     Tailwind's stock sm/md/lg. (The legacy bare --shadow variable below is
-     unrelated and keeps its own light/dark values, unchanged.) */
   --shadow-sm: 0 1px 2px rgba(23, 22, 26, 0.04);
   --shadow-md: 0 8px 30px rgba(23, 22, 26, 0.06);
   --shadow-lg: 0 16px 48px rgba(23, 22, 26, 0.1);
 
-  /* Type scale (§3) — each role's value picked from the spec's range;
-     carries its own line-height, and text-micro its tracking. Static, so
-     literal values directly here. */
   --text-display: 64px;
-  /* 56–72px range */
   --text-display--line-height: 1.1;
   --text-h1: 40px;
-  /* 36–44px range */
   --text-h1--line-height: 1.15;
   --text-h2: 28px;
-  /* 26–30px range */
   --text-h2--line-height: 1.25;
   --text-h3: 20px;
-  /* 19–21px range */
   --text-h3--line-height: 1.3;
   --text-body-lg: 18px;
-  /* 17–18px range */
   --text-body-lg--line-height: 1.6;
   --text-body: 16px;
-  /* 15–16px range */
   --text-body--line-height: 1.6;
   --text-small: 14px;
-  /* 13–14px range */
   --text-small--line-height: 1.4;
   --text-micro: 12px;
-  /* 11–12px range */
   --text-micro--line-height: 1.4;
   --text-micro--letter-spacing: 0.06em;
 
-  /* Placeholder font mapping — unchanged. Task 1 wires these to the
-     actual imported Manrope/Fraunces font files. */
   --font-sans: 'Manrope', system-ui, 'Segoe UI', Roboto, sans-serif;
   --font-display: 'Fraunces', ui-serif, Georgia, serif;
   --font-mono: ui-monospace, Consolas, monospace;
-
-  /* Spacing — deliberately not overridden. Tailwind v4's default scale
-     (--spacing: 0.25rem, 4px increments) already matches the design
-     system's §4 scale at every key it uses (p-4 = 16px ... p-24 = 96px). */
 }
 
 :root {
-  /* ---- Legacy variables — same names as before, values updated to the
-     real design-system palette (this is Task 0's actual job: "update the
-     underlying CSS variables to match"). Everything that already
-     referenced these by name (below in this file, and possibly elsewhere
-     in the app) keeps working and now renders the new palette. ---- */
   --text: #6f6b73;
-  /* was #6b6375 — design-system §2 "muted" */
   --text-h: #17161a;
-  /* was #08060d — design-system §2 "ink" */
   --bg: #f6f3ed;
-  /* was #fff — design-system §2 "paper" */
   --border: #ddd9d2;
-  /* was #e5e4e7 — design-system §2 "line" */
   --accent: #7357ff;
-  /* was #aa3bff — design-system §2 "accent" (Gist Violet) */
   --accent-bg: rgba(115, 87, 255, 0.09);
-  /* was rgba(170,59,255,.1) — accent-subtle, §2 */
 
-  /* Left untouched — no clean 1:1 mapping in the new design system, and
-     changing these wasn't part of Task 0's scope. */
   --code-bg: #f4f3ec;
   --accent-border: rgba(170, 59, 255, 0.5);
   --social-bg: rgba(244, 243, 236, 0.5);
@@ -116,8 +74,6 @@
   --heading: 'Manrope', system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
 
-  /* ---- New bare variables — genuinely new concepts with no legacy
-     counterpart (surface tone, elevated surface, faint text, lime, coral). ---- */
   --surface: #fffdf9;
   --surface-elevated: #f9f7f4;
   --faint: #aaa6ad;
@@ -138,53 +94,44 @@
   @media (max-width: 1024px) {}
 }
 
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --text: #a5a1aa;
-      /* design-system §2 dark "muted" */
-      --text-h: #f4f1ea;
-      /* design-system §2 dark "ink" */
-      --bg: #111114;
-      /* design-system §2 dark "paper" */
-      --border: #323139;
-      /* design-system §2 dark "line" */
-      /* Spec: "same hex, desaturated ~10–15% if a contrast check fails
-         against #19191E" — Violet failed (3.78:1) against #19191e. 
-         Desaturated and lightened to #a392f6 to pass WCAG AA (6.67:1). */
-      --accent: #a392f6;
-      --accent-bg: rgba(163, 146, 246, 0.09);
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #a5a1aa;
+    --text-h: #f4f1ea;
+    --bg: #111114;
+    --border: #323139;
+    /* Desaturated to #a392f6 to satisfy WCAG AA contrast against dark surface (#19191e). */
+    --accent: #a392f6;
+    --accent-bg: rgba(163, 146, 246, 0.09);
 
-      /* Untouched legacy tokens — dark values, unchanged from before. */
-      --code-bg: #1f2028;
-      --accent-border: rgba(192, 132, 252, 0.5);
-      --social-bg: rgba(47, 48, 58, 0.5);
-      --shadow:
-        rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+    --code-bg: #1f2028;
+    --accent-border: rgba(192, 132, 252, 0.5);
+    --social-bg: rgba(47, 48, 58, 0.5);
+    --shadow:
+      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
 
-      /* New bare variables — dark palette. */
-      --surface: #19191e;
-      --surface-elevated: #222229;
-      --faint: #aaa6ad;
-      /* no dark-specific value given in §2 — kept same as light */
-      --lime: #dfff57;
-      --lime-wash: rgba(223, 255, 87, 0.13);
-      --coral: #ff806f;
-      --coral-border: rgba(255, 128, 111, 0.3);
-    }
-
-    #social .button-icon {
-      filter: invert(1) brightness(2);
-    }
-
-    .animate-shimmer::after {
-      background: linear-gradient(
-        90deg,
-        transparent 0%,
-        rgba(255, 255, 255, 0.06) 50%,
-        transparent 100%
-      );
-    }
+    --surface: #19191e;
+    --surface-elevated: #222229;
+    --faint: #aaa6ad;
+    --lime: #dfff57;
+    --lime-wash: rgba(223, 255, 87, 0.13);
+    --coral: #ff806f;
+    --coral-border: rgba(255, 128, 111, 0.3);
   }
+
+  #social .button-icon {
+    filter: invert(1) brightness(2);
+  }
+
+  .animate-shimmer::after {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.06) 50%,
+      transparent 100%
+    );
+  }
+}
 
 body {
   margin: 0;
@@ -197,14 +144,11 @@ body {
   box-sizing: border-box;
 }
 
-
-
 h1,
 h2,
 h3 {
   font-family: var(--font-sans);
   font-weight: 600;
-  /* H1/H2/H3 are all 600 per §3's scale table */
   color: var(--color-ink);
 }
 
@@ -212,21 +156,18 @@ h1 {
   font-size: var(--text-h1);
   line-height: var(--text-h1--line-height);
   margin: 0 0 16px;
-  /* space-4 */
 }
 
 h2 {
   font-size: var(--text-h2);
   line-height: var(--text-h2--line-height);
   margin: 0 0 8px;
-  /* space-2, unchanged from before */
 }
 
 h3 {
   font-size: var(--text-h3);
   line-height: var(--text-h3--line-height);
   margin: 0 0 8px;
-  /* space-2 */
 }
 
 p {
@@ -276,26 +217,7 @@ code {
   }
 }
 
-/*
-  Modal entrance animations (design system §18 / §21 / Task 8).
-
-  Two animations coordinate on modal open:
-    - `modal-scrim`: the ink overlay fades from 0 to its target opacity (~200ms).
-    - `modal-panel`: the surface panel scales 0.96→1 and fades in (~200ms).
-
-  Why this timing:
-    - §18: "scrim fades in slightly faster" — scrim is instant-ish vs panel's
-      simultaneous 200ms; both use the same duration but the scale gives the
-      panel a brief illusion of arriving after the scrim.
-    - §21: 200–300ms range for "component transitions"; 200ms here since the
-      modal is an interstitial layer, not a page-level transition.
-    - Easing: `cubic-bezier(0.22, 1, 0.36, 1)` throughout (§21).
-
-  prefers-reduced-motion: state change is NOT removed — the modal still
-  appears, opacity still resolves to 1, scale still resolves to 1. Only the
-  motion is removed (animation: none), per §21's "instant state change rather
-  than removing the state change altogether" requirement.
-*/
+/* Modal backdrop and panel entrance keyframes */
 @keyframes modal-scrim-enter {
   from {
     opacity: 0;
@@ -333,20 +255,7 @@ code {
   }
 }
 
-/*
-  Toast entrance + exit animations (design system §19 / §21 / Task 9).
-
-  in:  slide from right (translateX 110%→0) + fade, 200ms — §19 "slide-in from
-       the right + fade". 110% (not 100%) ensures the shadow doesn't bleed into
-       the viewport edge mid-animation.
-  out: fade + slight scale-down (1→0.95), 150ms — §19 "fade + slight scale-down
-       on dismiss". Shorter than in so the disappearance feels snappier.
-
-  Both use the design system's easing curve (§21: cubic-bezier(0.22, 1, 0.36, 1)).
-
-  prefers-reduced-motion: animation: none, per §21's "instant state change"
-  requirement — element still appears/disappears, just without motion.
-*/
+/* Toast notification slide-in and dismiss animations */
 @keyframes toast-in {
   from {
     opacity: 0;
@@ -386,28 +295,7 @@ code {
   }
 }
 
-/*
-  Gist entrance animation (design system §11 / Task 5).
-
-  Fade + expand from 0 height, ~300ms, design-system easing.
-
-  Why @layer utilities: Tailwind v4 puts its own utilities in this layer;
-  placing custom animation helpers here keeps the same cascade-layer
-  priority so a consumer can safely combine .animate-gist-enter with any
-  Tailwind utility class without specificity surprises.
-
-  prefers-reduced-motion: the animation class produces no visible motion
-  when the user has requested reduced motion — the block still *appears*
-  (opacity/height resolve to their final values) but does so instantly
-  rather than over 300ms, per §21's requirement: "instant state change
-  rather than removing the state change altogether."
-
-  Implementation note on max-height approach: CSS cannot transition
-  height: auto, so we animate max-height from 0 to a generous upper bound
-  (600px — much larger than any realistic Gist summary) so the animation
-  reads as a smooth expand. The overflow: hidden on the element prevents
-  the content from painting outside the clamped max-height mid-animation.
-*/
+/* Max-height expansion transition for streaming AI summary block */
 @keyframes gist-enter {
   from {
     opacity: 0;
@@ -418,7 +306,7 @@ code {
   to {
     opacity: 1;
     max-height: 600px;
-    padding-top: 1rem;   /* matches the p-4 the Gist container carries */
+    padding-top: 1rem;
     padding-bottom: 1rem;
   }
 }
@@ -436,22 +324,7 @@ code {
   }
 }
 
-/*
-  Skeleton shimmer animation (design system §16 / Task 6).
-  Used by BookmarkCardSkeleton's placeholder bars.
-
-  Uses --line (border token, soft gray) and --surface-elevated (slightly
-  lighter) so the sweep works in both light and dark mode via the same
-  CSS variables the rest of the system uses — no hardcoded colors.
-
-  1.6s / ease-in-out = calm, not urgent, per §16's instruction that
-  skeleton animations "should read as calm 'thinking', not urgent loading."
-
-  prefers-reduced-motion: animation: none — the placeholder bars still
-  render at the resting --line background color, just without the sweep.
-  State change is preserved (skeleton still visible); only the motion
-  is removed, per §21.
-*/
+/* Skeleton shimmer sweep for content loading states */
 @keyframes shimmer-glare {
   0% {
     transform: translateX(-150%) skewX(-15deg);
@@ -492,10 +365,7 @@ code {
   }
 }
 
-/*
-  Search Overlay entrance animation (Task 12 / design system §14).
-  Expands from top center, 250ms, cubic-bezier.
-*/
+/* Search overlay scale and translation entrance */
 @keyframes overlay-expand {
   from {
     opacity: 0;
@@ -519,10 +389,7 @@ code {
   }
 }
 
-/*
-  Bottom Sheet entrance animation (Task 16 / mobile responsive pass).
-  Slides up from the bottom of the screen.
-*/
+/* Mobile bottom sheet slide entrance */
 @keyframes sheet-enter {
   from {
     transform: translateY(100%);
@@ -544,19 +411,7 @@ code {
   }
 }
 
-/*
-  Card entrance animation (design system §21 / Task 17).
-  "Card entrance (new bookmark slides/fades in)" is explicitly listed in §21's
-  motion inventory. Plays once on mount for every BookmarkCard — page-loaded
-  cards get a subtle "list assembles" feel; freshly-created cards get the
-  entrance the spec calls for.
-
-  250ms — sits in the 200–300ms "component transition" range (§21).
-  Easing: cubic-bezier(0.22, 1, 0.36, 1) throughout (§21).
-
-  prefers-reduced-motion: animation: none — card still appears instantly;
-  state change is never removed, per §21's requirement.
-*/
+/* Card list assembly entrance */
 @keyframes card-enter {
   from {
     opacity: 0;
@@ -580,15 +435,7 @@ code {
   }
 }
 
-/*
-  Fade-in (design system §21 / Task 17).
-  A lightweight opacity-only entrance for elements that should arrive
-  without drawing attention to themselves — EmptyState, ErrorCard,
-  Sidebar collections list, SearchOverlay results.
-
-  200ms — short enough to feel instant, long enough to avoid a jarring snap.
-  prefers-reduced-motion: animation: none — element still appears, instantly.
-*/
+/* Subtle opacity fade-in for asynchronous feedback states */
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -610,20 +457,7 @@ code {
   }
 }
 
-/*
-  Dropdown entrance animation (design system §21 / Task 17).
-  Used by AccountMenu's dropdown panel. Combines opacity, Y-translate,
-  and a very subtle scale — the same pattern as modal-panel-enter but
-  shorter (150ms — micro-interaction territory per §21's 120–180ms range)
-  and smaller in magnitude, since a dropdown is a smaller surface.
-
-  No exit animation: CSS-only exit requires keeping the element mounted
-  through the animation, which adds unmount-tracking complexity. For a
-  small utility dropdown, an instant unmount is acceptable.
-
-  prefers-reduced-motion: animation: none — dropdown still opens; only
-  the motion is removed, per §21.
-*/
+/* Dropdown popover entrance */
 @keyframes dropdown-enter {
   from {
     opacity: 0;
@@ -647,10 +481,7 @@ code {
   }
 }
 
-/*
-  Custom scrollbar utility for modals and scrollable panels.
-  Replaces chunky native OS scrollbars with a subtle, refined track and thumb.
-*/
+/* Custom scrollbar utility for scrollable overlays */
 @layer utilities {
   .custom-scrollbar {
     scrollbar-width: thin;
@@ -674,4 +505,4 @@ code {
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: var(--faint);
   }
-}
+}

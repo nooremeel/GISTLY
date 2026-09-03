@@ -5,7 +5,6 @@ import AddBookmarkForm from '../AddBookmarkForm';
 import { apiClient } from '../../api/client';
 import type { Bookmark } from '../../types/bookmark';
 
-// Mock apiClient
 vi.mock('../../api/client', () => ({
   apiClient: {
     get: vi.fn(),
@@ -15,7 +14,6 @@ vi.mock('../../api/client', () => ({
   getImageUrl: vi.fn((path) => path),
 }));
 
-// Mock useToast
 const mockShowToast = vi.fn();
 vi.mock('../../context/ToastContext', () => ({
   useToast: () => ({
@@ -30,7 +28,6 @@ describe('AddBookmarkForm component', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Default mocked responses for tag/collection autocomplete
     vi.mocked(apiClient.get).mockImplementation((path: string) => {
       if (path.includes('/tags')) {
         return Promise.resolve({ data: [{ _id: 'design' }, { _id: 'tech' }] } as any);
@@ -108,7 +105,6 @@ describe('AddBookmarkForm component', () => {
     const submitBtn = screen.getByRole('button', { name: /add bookmark/i });
     await user.click(submitBtn);
 
-    // Optimistic processing callback fires immediately
     expect(onProcessingMock).toHaveBeenCalledWith(
       expect.objectContaining({
         _processing: true,
@@ -116,7 +112,6 @@ describe('AddBookmarkForm component', () => {
       })
     );
 
-    // After API resolves, onCreated callback fires with real bookmark data
     await waitFor(() => {
       expect(apiClient.post).toHaveBeenCalledWith(
         '/api/bookmarks',
@@ -156,7 +151,6 @@ describe('AddBookmarkForm component', () => {
     await waitFor(() => {
       expect(onFailedMock).toHaveBeenCalled();
       expect(mockShowToast).toHaveBeenCalledWith('Server unavailable', 'error');
-      // Input value is restored
       expect(screen.getByLabelText(/paste a url/i)).toHaveValue('https://failing-url.com');
     });
   });

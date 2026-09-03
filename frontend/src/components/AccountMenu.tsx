@@ -1,4 +1,3 @@
-// frontend/src/components/AccountMenu.tsx
 import { useEffect, useRef, useState } from 'react';
 import { ChevronDown, LogOut, Image as ImageIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';

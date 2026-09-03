@@ -1,8 +1,5 @@
 /**
- * Narrows an unknown catch binding to the apiClient's `.status` number.
- * The apiClient throws a plain `Error` with a `.status` property attached —
- * but it's untyped JS, so under `strict`'s `useUnknownInCatchVariables`
- * the catch binding is `unknown`. This helper narrows it safely.
+ * Extracts HTTP status code from an unknown caught error, if present.
  */
 export function getErrorStatus(err: unknown): number | undefined {
   if (err && typeof err === 'object' && 'status' in err) {
@@ -13,9 +10,7 @@ export function getErrorStatus(err: unknown): number | undefined {
 }
 
 /**
- * Extracts a human-readable message from an unknown catch binding,
- * falling back to the provided `fallback` string if the error has no
- * `.message` (e.g. a non-Error throw, a network failure, etc).
+ * Extracts a human-readable message from an unknown caught error with fallback support.
  */
 export function getErrorMessage(err: unknown, fallback: string): string {
   return err instanceof Error && err.message ? err.message : fallback;

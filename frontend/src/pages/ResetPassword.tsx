@@ -20,7 +20,6 @@ export default function ResetPassword() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  // Check if token is missing
   if (!token) {
     return (
       <div className="min-h-[100svh] flex flex-col items-center justify-center p-6 bg-paper">

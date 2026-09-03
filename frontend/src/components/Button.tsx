@@ -7,18 +7,9 @@ export type ButtonVariant = 'primary' | 'accent' | 'secondary' | 'ghost' | 'dest
 export type ButtonSize = 'default' | 'compact';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  /** Visual treatment — see design system §7. Defaults to `primary`. */
   variant?: ButtonVariant;
-  /** `default` = 40px/radius-md, `compact` = 32px/radius-sm for inline card actions. */
   size?: ButtonSize;
-  /**
-   * AI-forward loading state: replaces the label with the pulsing Gist-mark
-   * motif (§7/§16) instead of a generic spinner. Reserved for AI-triggering
-   * actions (e.g. "Add Bookmark" while the summary is generating) — for
-   * plain async actions (Login, Save edit, Delete) prefer swapping the
-   * children text yourself and just passing `disabled`, per §16's "Button
-   * loading" note.
-   */
+  /** Replaces label with an animated icon for AI-driven generation states. */
   loading?: boolean;
   children?: ReactNode;
 }
@@ -39,10 +30,7 @@ const sizeStyles: Record<ButtonSize, string> = {
 };
 
 const variantStyles: Record<ButtonVariant, string> = {
-  // border-0 is explicit (not just "omit a border utility") because the
-  // base layer still carries the placeholder <button> rule's 1px border
-  // for any raw button elsewhere in the app (see index.css) — Primary/
-  // Accent/Ghost need to actively override it to get §7's "border: none".
+  // Explicitly resets base button border for borderless variants.
   primary: 'border-0 bg-ink text-paper hover:brightness-90 hover:shadow-sm',
   accent: 'border-0 bg-accent text-white hover:brightness-110 hover:shadow-sm',
   secondary: 'bg-surface text-ink border border-line hover:bg-line/25',
@@ -52,10 +40,7 @@ const variantStyles: Record<ButtonVariant, string> = {
 };
 
 /**
- * Core button primitive (design system §7). Pure presentational — no data
- * fetching, no form logic. Every variant carries the same focus-visible
- * ring, disabled treatment, and press animation; only background/text/
- * border differ.
+ * Core button primitive providing accessible focus rings, press feedback, and variants.
  */
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
   { variant = 'primary', size = 'default', loading = false, disabled, className, children, type = 'button', ...rest },
@@ -68,12 +53,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       (Array.isArray(children) && children.some((c) => typeof c === 'string' || typeof c === 'number'));
     if (!hasText && !rest['aria-label'] && !rest['aria-labelledby']) {
       // eslint-disable-next-line no-console
-      console.warn(
-        'Button: icon-only buttons need an aria-label (design system §22 — every icon-only button must have an accessible name).'
-      );
+      console.warn('Button: icon-only buttons require an accessible aria-label.');
     }
   }
-
 
   return (
     <button

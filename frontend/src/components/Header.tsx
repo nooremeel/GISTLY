@@ -6,15 +6,15 @@ import AccountMenu from './AccountMenu';
 
 export interface HeaderProps {
   onOpenSearch: () => void;
-  /** Opens the desktop Add Bookmark modal. */
   onOpenAdd: () => void;
-  /**
-   * Forwarded ref for the "Add" button so the modal can return focus to it
-   * on close — required by §18 / §22's focus-return contract.
-   */
+  /** Ref for focus restoration after modal dismissal. */
   addButtonRef?: React.Ref<HTMLButtonElement>;
 }
 
+/**
+ * Sticky application header providing brand navigation, global search trigger,
+ * bookmark creation modal trigger, and account menu.
+ */
 export default function Header({ onOpenSearch, onOpenAdd, addButtonRef }: HeaderProps) {
   return (
     <header className="flex h-16 shrink-0 items-center justify-between md:justify-start gap-4 border-b border-line bg-surface px-4 md:px-6">

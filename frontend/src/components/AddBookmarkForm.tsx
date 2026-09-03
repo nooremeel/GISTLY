@@ -22,45 +22,17 @@ const initialForm = {
 };
 
 export interface AddBookmarkFormProps {
-  /**
-   * Called *immediately* on submit (before the API call) with a
-   * processing-shaped bookmark so the caller can prepend a
-   * `<ProcessingCard>` to the list optimistically.
-   */
+  /** Immediate optimistic callback with provisional bookmark representation. */
   onProcessing?: (bookmark: ProcessingBookmark) => void;
-  /**
-   * Called when the API responds with the real `Bookmark` object.
-   * The bookmark carries `_tempId` (so the caller can swap the
-   * ProcessingCard) and `_animateGist` (so the real card plays
-   * Task 5's Gist entrance animation on swap).
-   */
+  /** Invoked when backend returns persisted bookmark; carries _tempId for item replacement. */
   onCreated?: (bookmark: Bookmark & { _tempId: string; _animateGist: boolean }) => void;
-  /**
-   * Called when the API call fails, with the temp ID that was passed
-   * to `onProcessing`. The caller should remove the stuck ProcessingCard
-   * rather than leaving it in a permanent "Saving…" state.
-   */
+  /** Invoked on creation failure to revert optimistic placeholder and restore form state. */
   onFailed?: (tempId: string) => void;
 }
 
 /**
- * Bookmark creation form (design system §8 / Task 7). Rebuilt from raw
- * `<input>`/`<button>` elements to the Task 2 primitives.
- *
- * Creation flow:
- *   1. User submits → `onProcessing` fires with a temp bookmark →
- *      caller prepends a `<ProcessingCard>` to the list.
- *   2. API call runs (multi-second: page fetch + AI summary).
- *   3. API responds → `onCreated` fires with the real `Bookmark` +
- *      the temp ID → caller swaps ProcessingCard for a real
- *      `<BookmarkCard>` with `<Gist animate>` (Task 5's entrance anim).
- *
- * Functional contracts preserved:
- *   - Client-side "url or note required" guard runs before any API call.
- *   - `err.status === 429` → rate-limit toast (aiLimiter, per STATE.md).
- *   - No refetch — the in-place state update pattern is maintained.
- *   - `summary: null` is not an error; the real card just renders without
- *     a Gist block if the AI failed quietly.
+ * Bookmark creation form supporting asynchronous page scraping and AI summarization
+ * via optimistic UI updates and error-rollback recovery.
  */
 export default function AddBookmarkForm({ onProcessing, onCreated, onFailed }: AddBookmarkFormProps) {
   const [form, setForm] = useState(initialForm);
@@ -116,7 +88,7 @@ export default function AddBookmarkForm({ onProcessing, onCreated, onFailed }: A
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // Mirror the backend's "at least one of url/note" rule client-side.
+    // Enforce invariant: either a URL or note must be populated before submission.
     if (!form.url.trim() && !form.note.trim()) {
       setFieldError(true);
       return;
@@ -134,7 +106,6 @@ export default function AddBookmarkForm({ onProcessing, onCreated, onFailed }: A
       finalUrl = 'https://' + finalUrl;
     }
 
-    // Step 1 — optimistic: put a ProcessingCard in the list immediately.
     const processingBookmark: ProcessingBookmark = {
       _id: tempId,
       _processing: true,
@@ -147,12 +118,11 @@ export default function AddBookmarkForm({ onProcessing, onCreated, onFailed }: A
     };
     onProcessing?.(processingBookmark);
 
-    // Save snapshot of current form data so we can restore it if the request fails
+    // Snapshot current form values to allow state restoration if network request fails.
     const submittedForm = { ...form };
     setForm(initialForm);
     setIsLoading(true);
 
-    // Step 2 — async: wait for the server + AI.
     try {
       const bookmark = (await apiClient.post('/api/bookmarks', {
         title: processingBookmark.title,
@@ -163,13 +133,9 @@ export default function AddBookmarkForm({ onProcessing, onCreated, onFailed }: A
         imageUrl: submittedForm.imageUrl || undefined,
       })) as Bookmark;
 
-      // Step 3 — swap: replace the ProcessingCard with the real card.
-      // _animateGist: true tells BookmarkList to render the card with
-      // <Gist animate> so Task 5's entrance animation plays.
       onCreated?.({ ...bookmark, _tempId: tempId, _animateGist: true });
       showToast('Bookmark added!', 'success');
     } catch (err) {
-      // On API failure: remove the optimistic ProcessingCard and restore user input
       onFailed?.(tempId);
       setForm(submittedForm);
       if (getErrorStatus(err) === 429) {
@@ -192,13 +158,6 @@ export default function AddBookmarkForm({ onProcessing, onCreated, onFailed }: A
       aria-label="Add a bookmark"
       noValidate
     >
-      {/*
-        URL field — the primary action. Gets the lg size variant (Body
-        Large, h-12) and a larger gap below it to visually separate it
-        from the secondary fields. §8 explicitly calls this out: "the URL
-        input gets slightly larger sizing — it's the primary action of
-        that whole component."
-      */}
       <div className="flex flex-col gap-2">
         <Input
           sizeVariant="lg"
@@ -214,17 +173,11 @@ export default function AddBookmarkForm({ onProcessing, onCreated, onFailed }: A
           spellCheck={false}
           error={fieldError ? 'Please provide a URL or a note.' : undefined}
         />
-        {/*
-          Thin visual separator between primary and secondary fields.
-          Uses border-line token — same as card borders — so it sits
-          quietly rather than competing with the content.
-        */}
         <p className="text-small text-faint text-center pt-2">
           — or fill in the details manually —
         </p>
       </div>
 
-      {/* Secondary fields — same gap-6 rhythm as each other */}
       <div className="flex flex-col gap-4">
         <Input
           label="Title"
@@ -328,11 +281,6 @@ export default function AddBookmarkForm({ onProcessing, onCreated, onFailed }: A
         </div>
       </div>
 
-      {/*
-        Submit button — primary variant, full width. `loading` prop
-        swaps the label for the pulsing Sparkles motif (§7/§16 —
-        AI-forward loading, reserved for AI-triggering actions).
-      */}
       <Button
         type="submit"
         variant="primary"

@@ -1,4 +1,3 @@
-// backend/config/env.js
 const REQUIRED_VARS = ['MONGODB_URI', 'JWT_SECRET', 'GEMINI_API_KEY'];
 
 function validateEnv() {

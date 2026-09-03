@@ -5,30 +5,16 @@ import { fieldLabel, fieldBase, fieldError, fieldErrorText, inputSizes } from '.
 import type { FieldSize } from './formField';
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
-  /** Rendered above the field (Small, 600 weight, ink) — preserves the
-   * existing label/input pairing pattern rather than floating labels
-   * (explicitly ruled out by §8). Omit if you're pairing your own
-   * `<label htmlFor>` elsewhere. */
   label?: ReactNode;
-  /** Inline validation message (Small, coral) shown below the field, and
-   * flips the field's border to coral. Omit when the field is valid. */
   error?: string;
-  /** `default` for most fields; `lg` for the primary "Paste a URL" field on
-   * the bookmark-creation form (§8), which is Body Large and taller than
-   * everything else on that form. Named `sizeVariant` (not `size`) because
-   * `size` is already a native `<input>` HTML attribute (number of visible
-   * characters) — keeping both would collide. */
+  /** Named `sizeVariant` to avoid collision with native HTML `<input size>` attribute. */
   sizeVariant?: FieldSize;
-  /** Optional leading icon — the one exception §8 carves out of "no
-   * inline icon-in-input clutter", reserved for the search field's leading
-   * search icon. */
   leadingIcon?: ReactNode;
   wrapperClassName?: string;
 }
 
 /**
- * Single-line text input primitive (design system §8). Pure presentational
- * — validation/submission stays with the consuming form.
+ * Text input primitive with label pairing, error messaging, and icon adornment.
  */
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   { label, error, sizeVariant = 'default', leadingIcon, id, className, wrapperClassName, ...rest },

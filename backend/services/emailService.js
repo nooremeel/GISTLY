@@ -7,7 +7,7 @@ async function getTransporter() {
     return cachedTransporter;
   }
 
-  // 1. If SMTP env vars are explicitly provided (e.g. production/staging)
+  // Use configured SMTP transport if available; otherwise initialize local development transporter.
   if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
     cachedTransporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
@@ -21,7 +21,7 @@ async function getTransporter() {
     return cachedTransporter;
   }
 
-  // 2. Local development: create an Ethereal test account or fallback to console
+  // In development environments without configured SMTP, provision an ephemeral Ethereal account.
   try {
     const testAccount = await nodemailer.createTestAccount();
     cachedTransporter = nodemailer.createTransport({
@@ -48,7 +48,7 @@ async function getTransporter() {
  * @returns {Promise<{ success: boolean, previewUrl?: string }>}
  */
 async function sendPasswordResetEmail({ to, resetUrl }) {
-  // During tests, bypass actual mail sending
+  // Bypass outbound network I/O in test environments.
   if (process.env.NODE_ENV === 'test') {
     return { success: true, previewUrl: null };
   }
@@ -112,7 +112,6 @@ If you did not request this change, please ignore this email.
   const transporter = await getTransporter();
 
   if (!transporter) {
-    // Console fallback if no transport is available
     console.log('\n================== [GISTLY DEV EMAIL] ==================');
     console.log(`To: ${to}`);
     console.log(`Subject: ${subject}`);

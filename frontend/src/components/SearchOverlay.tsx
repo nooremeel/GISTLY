@@ -30,22 +30,18 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
 
-  // ─── Reset state on open ──────────────────────────────────────────────────
   useEffect(() => {
     if (isOpen) {
       setSearchTerm('');
       setResults([]);
       previousFocusRef.current = document.activeElement as HTMLElement | null;
-      // Use rAF instead of a magic setTimeout — waits for the panel to be
-      // painted before moving focus, which is more reliable across devices.
+      // Wait for next animation frame so DOM has painted before focusing input
       requestAnimationFrame(() => inputRef.current?.focus());
     } else {
-      // Restore focus on close
       previousFocusRef.current?.focus();
     }
   }, [isOpen]);
 
-  // ─── Accessibility: trap Tab & Escape ────────────────────────────────────
   useEffect(() => {
     if (!isOpen) return;
     
@@ -85,7 +81,6 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  // ─── Debounced Search API ────────────────────────────────────────────────
   useEffect(() => {
     if (!isOpen || !searchTerm.trim()) {
       setResults([]);
@@ -132,15 +127,12 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
         aria-label="Search your library"
         className={cx(
           'animate-overlay-expand relative flex flex-col overflow-hidden',
-          // Desktop layout
           'md:w-full md:max-w-2xl md:rounded-feature md:border md:border-line md:shadow-lg',
-          // Mobile layout
           'w-full h-[100dvh] md:h-auto rounded-none border-none bg-surface'
         )}
         onClick={(e) => e.stopPropagation()}
         aria-hidden={undefined}
       >
-        {/* Search Input Area */}
         <div className="flex items-center border-b border-line px-4 md:px-6 py-4">
           <Search className="size-5 text-muted mr-3 shrink-0" aria-hidden="true" />
           <input

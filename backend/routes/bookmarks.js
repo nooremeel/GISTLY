@@ -13,7 +13,7 @@ const {
   getCollections
 } = require('../controllers/bookmarkController');
 
-router.use(protect); // every route below requires a valid session
+router.use(protect);
 
 router.route('/')
   .get(getBookmarks)

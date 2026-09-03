@@ -1,4 +1,3 @@
-// backend/middleware/security.js
 const helmet = require('helmet');
 const cors = require('cors');
 
@@ -39,7 +38,7 @@ function sanitizeInPlace(obj) {
 function mongoSanitize(req, res, next) {
   sanitizeInPlace(req.body);
   sanitizeInPlace(req.params);
-  sanitizeInPlace(req.query); // mutated in place, never reassigned
+  sanitizeInPlace(req.query);
   next();
 }
 

@@ -35,7 +35,6 @@ export default function MobileCollections() {
           <Folder className="size-6 text-muted" aria-hidden="true" />
           <h1 className="text-h2 font-semibold text-ink">Collections</h1>
         </div>
-        {/* Mobile Search Bar directly under heading */}
         <div className="md:hidden mt-4">
           <div
             role="button"

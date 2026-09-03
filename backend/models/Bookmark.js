@@ -40,7 +40,7 @@ const bookmarkSchema = new mongoose.Schema(
     },
   },
   {
-    timestamps: true, // adds createdAt and updatedAt
+    timestamps: true,
   }
 );
 
@@ -56,10 +56,7 @@ bookmarkSchema.index({ user: 1, createdAt: -1 });
 bookmarkSchema.index({ user: 1, collection: 1 });
 bookmarkSchema.index({ user: 1, tags: 1 });
 
-// Full-text search index — enables efficient server-side search across
-// title, note, url, and tags without scanning the entire collection.
-// The search query in getBookmarks will be updated to $text once this
-// index is confirmed to be in place on the MongoDB instance.
+// Compound text index supporting full-text search across content fields.
 bookmarkSchema.index(
   { title: 'text', note: 'text', url: 'text', tags: 'text' },
   { name: 'bookmark_text_search' }

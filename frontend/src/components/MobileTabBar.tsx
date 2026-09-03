@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Library, Plus, Folder, Tags, Search } from 'lucide-react';
+import { Library, Plus, Folder, Tags } from 'lucide-react';
 import { cx } from '../lib/cx';
 import AccountMenu from './AccountMenu';
 
@@ -41,7 +41,6 @@ export default function MobileTabBar({ onOpenAdd }: MobileTabBarProps) {
         Tags
       </NavLink>
 
-      {/* Center FAB (Add) - oversized and breaking out of the top edge */}
       <div className="flex-1 flex justify-center relative">
         <button
           type="button"

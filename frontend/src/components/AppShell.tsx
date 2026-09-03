@@ -11,16 +11,8 @@ export type AppShellContext = {
   isMobileAddOpen: boolean;
   setIsMobileAddOpen: (v: boolean) => void;
   setIsSearchOpen: (v: boolean) => void;
-  /**
-   * Opens the desktop Add Bookmark modal. Passed through the outlet context
-   * so child pages (Home) don't need to re-manage this state locally.
-   */
   setIsAddOpen: (v: boolean) => void;
-  /**
-   * The BookmarkList imperative handle — exposed here so the Add modal
-   * (rendered at AppShell level) can still call addBookmark / replaceBookmark
-   * to splice optimistic placeholders into the list without a refetch.
-   */
+  /** Imperative handle allowing modals to mutate the active bookmark list without refetching. */
   bookmarkListRef: React.RefObject<BookmarkListHandle | null>;
 };
 
@@ -29,19 +21,11 @@ export default function AppShell() {
   const [isMobileAddOpen, setIsMobileAddOpen] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
 
-  /** Ref forwarded to the "Add" button in Header so focus returns after close. */
   const addButtonRef = useRef<HTMLButtonElement>(null);
-
-  /**
-   * The BookmarkList handle lives here (AppShell) rather than in Home,
-   * because the AddBookmarkModal renders at AppShell level and needs access
-   * to addBookmark / replaceBookmark. Home no longer manages this ref.
-   */
   const bookmarkListRef = useRef<BookmarkListHandle>(null);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Command+K on Mac, Ctrl+K on Windows
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
         setIsSearchOpen((prev) => !prev);
@@ -79,9 +63,6 @@ export default function AppShell() {
       <SearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
       <MobileTabBar onOpenAdd={() => setIsMobileAddOpen(true)} />
 
-      {/* Desktop Add Bookmark modal — portalled to document.body inside the
-          component, rendered at AppShell level so it can access
-          bookmarkListRef regardless of which child route is active. */}
       {isAddOpen && (
         <AddBookmarkModal
           triggerRef={addButtonRef}

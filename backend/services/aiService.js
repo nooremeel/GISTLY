@@ -84,7 +84,8 @@ Content:
 ${content}`;
 
     const generatePromise = model.generateContent(prompt);
-    generatePromise.catch(() => {}); // Prevent unhandled rejection if timeout wins
+    // Suppress unhandled rejection if the timeout promise resolves first in Promise.race.
+    generatePromise.catch(() => {});
 
     const aiTimeoutPromise = new Promise((_, reject) => {
       aiTimeoutId = setTimeout(() => reject(new Error('Gemini API timeout')), 30000);

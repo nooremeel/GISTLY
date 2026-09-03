@@ -17,21 +17,13 @@ export interface BookmarkCardProps {
   bookmark: Bookmark;
   onUpdate: (updated: Bookmark) => void;
   onDelete: (deletedId: string) => void;
-  /** When `true`, the Gist block enters with the fade+expand animation
-   *  (Task 5's `animate-gist-enter`). Set by `BookmarkList` when it
-   *  swaps a `ProcessingCard` for the real card — this is the moment
-   *  the entrance animation is meant to fire (design system §11/§16). */
+  /** Plays entrance animation on the Gist block when transitioning from a processing placeholder. */
   animateGist?: boolean;
 }
 
-// Card shows at most this many tags before collapsing the rest into a
-// "+N" overflow indicator (design system §12).
 const MAX_VISIBLE_TAGS = 4;
 
-/** Compact relative-time label ("3m ago", "2d ago") for the card's
- * timestamp (design system §10). Returns '' for an unparseable date
- * rather than throwing, since a malformed timestamp shouldn't break the
- * whole card. */
+/** Formats timestamp as compact relative time ("3m ago", "2d ago"), returning empty string on invalid dates. */
 function formatRelativeTime(iso: string): string {
   const then = new Date(iso).getTime();
   if (Number.isNaN(then)) return '';
@@ -55,8 +47,7 @@ function formatRelativeTime(iso: string): string {
 }
 
 /**
- * Bookmark card (design system §10). The product's core surface — see
- * `gistly-design-system.md` §10/§11/§12 for the full spec this implements.
+ * Core bookmark card presenting title, AI gist, cover preview, tags, and actions.
  */
 export default function BookmarkCard({ bookmark, onUpdate, onDelete, animateGist = false }: BookmarkCardProps) {
   const [isEditing, setIsEditing] = useState(false);
@@ -66,16 +57,13 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, animateGist
   const confirmTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { showToast } = useToast();
 
-  /**
-   * Ref for the Edit button — passed as `triggerRef` to EditBookmarkModal
-   * so focus returns here when the modal closes (§18 / §22 requirement).
-   */
+  // Retains reference to trigger element for focus restoration upon modal dismissal.
   const editBtnRef = useRef<HTMLButtonElement>(null);
 
   const handleDelete = async () => {
     if (!confirmingDelete) {
       setConfirmingDelete(true);
-      // Auto-revert after 4 seconds if not confirmed
+      // Auto-revert confirmation prompt after 4 seconds of inactivity
       if (confirmTimeoutRef.current) clearTimeout(confirmTimeoutRef.current);
       confirmTimeoutRef.current = setTimeout(() => setConfirmingDelete(false), 4000);
       return;
@@ -99,8 +87,7 @@ export default function BookmarkCard({ bookmark, onUpdate, onDelete, animateGist
 
   const domain = getDomain(bookmark.url);
   const hasTitle = Boolean(bookmark.title);
-  // Domain gets its own metadata line only when it won't just duplicate
-  // the headline below (i.e. there's a real title to show separately).
+  // Display domain line only when it does not duplicate the headline
   const showDomainLine = hasTitle && Boolean(domain);
   const headline = bookmark.title || domain || bookmark.url || 'Untitled bookmark';
 

@@ -30,8 +30,7 @@ function validateBookmarkUrl(req, res, next) {
     return next();
   }
 
-  // Normalise the URL in-place on req.body so the controller always
-  // receives a fully-qualified URL (was a const-reassignment bug).
+  // Prepend protocol scheme if omitted to guarantee downstream URL parsing validity.
   if (!/^https?:\/\//i.test(req.body.url)) {
     req.body.url = 'https://' + req.body.url;
   }

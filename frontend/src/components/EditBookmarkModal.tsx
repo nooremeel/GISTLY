@@ -27,37 +27,14 @@ export interface EditBookmarkModalProps {
   bookmark: Bookmark;
   onClose: () => void;
   onSaved: (updated: Bookmark) => void;
-  /**
-   * A ref to the element that triggered the modal (the Edit button in
-   * `BookmarkCard`). When provided, focus is returned to it on close —
-   * required by §18 and §22 to complete the keyboard-navigation loop.
-   */
+  /** Reference to trigger element for focus restoration on close. */
   triggerRef?: React.RefObject<HTMLElement | null>;
 }
 
 /**
- * Edit-bookmark modal (design system §18 / Task 8).
- *
- * Accessibility requirements implemented here (§18 / §22):
- *   - Focus moves to the first focusable field on open.
- *   - Tab/Shift+Tab are trapped within the panel while open.
- *   - Escape closes the modal from any focused element inside it.
- *   - Clicking the scrim closes the modal.
- *   - On close, focus returns to `triggerRef` (the Edit button that opened it).
- *   - `role="dialog"`, `aria-modal="true"`, `aria-labelledby` wires the
- *     panel heading to assistive tech so it's announced as a dialog.
- *
- * Functional contracts preserved (STATE.md §15 "must not break" list):
- *   - `err.status === 404` → "This bookmark no longer exists" toast.
- *   - `onSaved(updated)` — parent (BookmarkList via BookmarkCard) splices
- *     the updated bookmark into state; no refetch.
- *   - Saving is a non-AI action → plain disabled + text swap, NOT the
- *     pulsing Gist-mark `loading` prop (§16's explicit distinction).
- *
- * Rendered via `ReactDOM.createPortal` to `document.body` so the overlay
- * sits above the card's own stacking context. Bookmark cards use CSS
- * `transform` on hover which creates a containing block for fixed-position
- * children — portalling out is the correct fix, not z-index fighting.
+ * Modal dialog for editing bookmark details.
+ * Portalled to document.body to avoid containing-block trapping caused by
+ * CSS transforms on animated parent cards.
  */
 export default function EditBookmarkModal({
   bookmark,
@@ -97,12 +74,6 @@ export default function EditBookmarkModal({
   /** Stable heading id for aria-labelledby. */
   const TITLE_ID = 'edit-modal-title';
 
-  // ─── Close + focus-return ─────────────────────────────────────────────────
-  /**
-   * Every close path (Escape, backdrop click, Cancel button, X button) calls this so
-   * focus always returns to the trigger — never leaves the user stranded
-   * on <body> (§18 / §22). Defined before useEffect callbacks that reference it.
-   */
   const handleClose = useCallback(() => {
     triggerRef?.current?.focus();
     onClose();
@@ -118,7 +89,6 @@ export default function EditBookmarkModal({
     }
   };
 
-  // ─── Accessibility: close on Escape ──────────────────────────────────────
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -130,7 +100,6 @@ export default function EditBookmarkModal({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleClose]);
 
-  // ─── Accessibility: focus first field on mount ────────────────────────────
   useEffect(() => {
     const panel = panelRef.current;
     if (!panel) return;
@@ -138,7 +107,6 @@ export default function EditBookmarkModal({
     first?.focus();
   }, []);
 
-  // ─── Accessibility: trap Tab within the panel ─────────────────────────────
   useEffect(() => {
     const panel = panelRef.current;
     if (!panel) return;
@@ -155,13 +123,11 @@ export default function EditBookmarkModal({
       const last = focusable[focusable.length - 1];
 
       if (e.shiftKey) {
-        // Shift+Tab: if focus is on the first element, wrap to last.
         if (document.activeElement === first) {
           e.preventDefault();
           last.focus();
         }
       } else {
-        // Tab: if focus is on the last element, wrap to first.
         if (document.activeElement === last) {
           e.preventDefault();
           first.focus();
@@ -196,11 +162,10 @@ export default function EditBookmarkModal({
     }
   };
 
-  // ─── Form submit ──────────────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
-    // Mirror the backend's "at least one of url/note" rule client-side.
+    // Enforce invariant: either a URL or note must be provided.
     if (!url.trim() && !note.trim()) {
       setFieldError(true);
       return;
@@ -222,9 +187,7 @@ export default function EditBookmarkModal({
         payload
       )) as Bookmark;
       showToast('Bookmark updated', 'success');
-      onSaved(updated); // parent splices this into state — no refetch
-      // Note: modal unmounts via onSaved → setIsEditing(false) in BookmarkCard,
-      // so we don't call handleClose() here — the parent handles unmounting.
+      onSaved(updated);
     } catch (err) {
       showToast(
         getErrorStatus(err) === 404
@@ -232,7 +195,7 @@ export default function EditBookmarkModal({
           : 'Failed to update bookmark',
         'error'
       );
-      setSaving(false); // only reset on error; on success the modal unmounts
+      setSaving(false);
     }
   };
 

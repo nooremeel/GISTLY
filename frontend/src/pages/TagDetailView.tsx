@@ -42,7 +42,7 @@ export default function TagDetailView() {
 
   const handleSaved = (updated: Bookmark) => {
     setBookmarks((prev) => {
-      // If the user removed the tag, take it out of this view
+      // Remove bookmark from view if active tag was removed during update
       if (!updated.tags.includes(tag!)) {
         return prev.filter((b) => b._id !== updated._id);
       }
@@ -59,7 +59,6 @@ export default function TagDetailView() {
             {tag}
           </h1>
         </div>
-        {/* Mobile Search Bar directly under heading */}
         <div className="md:hidden mt-4">
           <div
             onClick={() => setIsSearchOpen(true)}

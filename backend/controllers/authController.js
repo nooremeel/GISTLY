@@ -66,7 +66,6 @@ function logout(req, res) {
 }
 
 async function getMe(req, res) {
-  // req.user is set by the auth middleware
   return res.status(200).json({ id: req.user._id, email: req.user.email, profilePicture: req.user.profilePicture });
 }
 
@@ -96,7 +95,7 @@ async function forgotPassword(req, res) {
 
     const user = await User.findOne({ email: email.toLowerCase().trim() });
     if (!user) {
-      // Return 200 to prevent user enumeration
+      // Return identical success response to mitigate account enumeration attacks.
       return res.status(200).json({
         success: true,
         message: 'If an account with that email exists, a password reset link has been sent.',
@@ -163,7 +162,7 @@ async function resetPassword(req, res) {
     user.resetPasswordExpire = undefined;
     await user.save();
 
-    // Issue JWT and set cookie so the user is immediately logged in
+    // Establish authenticated session immediately following credential rotation.
     const authToken = generateToken(user._id);
     setTokenCookie(res, authToken);
 

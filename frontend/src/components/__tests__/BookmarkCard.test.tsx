@@ -5,7 +5,6 @@ import BookmarkCard from '../BookmarkCard';
 import type { Bookmark } from '../../types/bookmark';
 import { apiClient } from '../../api/client';
 
-// Mock apiClient
 vi.mock('../../api/client', () => ({
   apiClient: {
     get: vi.fn().mockResolvedValue({ data: [] }),
@@ -15,7 +14,6 @@ vi.mock('../../api/client', () => ({
   getImageUrl: vi.fn((path) => path),
 }));
 
-// Mock useToast
 const mockShowToast = vi.fn();
 vi.mock('../../context/ToastContext', () => ({
   useToast: () => ({
@@ -68,13 +66,10 @@ describe('BookmarkCard component', () => {
       />
     );
 
-    // Visible tags: first 4 ('react', 'frontend', 'javascript', 'docs')
     expect(screen.getByText('react')).toBeInTheDocument();
     expect(screen.getByText('frontend')).toBeInTheDocument();
     expect(screen.getByText('javascript')).toBeInTheDocument();
     expect(screen.getByText('docs')).toBeInTheDocument();
-
-    // 6 total tags - 4 visible = +2 overflow
     expect(screen.getByText(/\+2/)).toBeInTheDocument();
   });
 
@@ -110,7 +105,6 @@ describe('BookmarkCard component', () => {
     const editBtn = screen.getByRole('button', { name: /edit bookmark/i });
     await user.click(editBtn);
 
-    // Edit modal dialog should now be rendered in the document
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /edit bookmark/i })).toBeInTheDocument();
   });
@@ -130,13 +124,11 @@ describe('BookmarkCard component', () => {
 
     const deleteBtn = screen.getByRole('button', { name: /delete bookmark/i });
 
-    // 1st click: toggles confirmation prompt ("Sure?")
     await user.click(deleteBtn);
     expect(screen.getByText('Sure?')).toBeInTheDocument();
     expect(apiClient.delete).not.toHaveBeenCalled();
     expect(onDeleteMock).not.toHaveBeenCalled();
 
-    // 2nd click: confirms deletion
     await user.click(screen.getByRole('button', { name: /confirm delete bookmark/i }));
 
     await waitFor(() => {

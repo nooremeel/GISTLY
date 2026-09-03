@@ -4,13 +4,6 @@ import { cx } from '../lib/cx';
 export type BadgeVariant = 'neutral' | 'success' | 'error';
 
 export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
-  /**
-   * `neutral` (default) is the collection badge from §12 — muted text on a
-   * faint neutral background, deliberately shaped differently from `Tag`
-   * (no border) so the two are never confused.
-   * `success`/`error` follow §2's semantic mapping (lime+ink / coral) for
-   * "processed" badges and similar status labels.
-   */
   variant?: BadgeVariant;
 }
 
@@ -23,9 +16,7 @@ const variantStyles: Record<BadgeVariant, string> = {
 };
 
 /**
- * Badge primitive (design system §12 collection badge, §2 semantic
- * mapping). Distinct from `Tag`: no border, rectangle-ish rather than
- * pill-ish shape, and never carries a `#` prefix.
+ * Status and category badge indicator.
  */
 export function Badge({ variant = 'neutral', className, children, ...rest }: BadgeProps) {
   return (

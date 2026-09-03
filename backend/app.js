@@ -29,7 +29,7 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is healthy' });
 });
 
-// Exact-path validation/rate-limiting, registered before router mounts
+// Explicit route-level rate limiting and payload validation registered prior to subrouters.
 app.post('/api/auth/login', authLimiter, validateLogin);
 app.post('/api/auth/register', validateRegister);
 app.post('/api/auth/forgot-password', passwordResetLimiter, validateForgotPassword);

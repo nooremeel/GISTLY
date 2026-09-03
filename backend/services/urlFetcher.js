@@ -76,7 +76,8 @@ async function fetchPageData(url) {
       }
 
       const fetchPromise = YoutubeTranscript.fetchTranscript(url);
-      fetchPromise.catch(() => {}); // Prevent unhandled rejection if timeout wins
+      // Suppress unhandled rejection if the timeout aborts first in Promise.race.
+      fetchPromise.catch(() => {});
 
       const timeoutPromise = new Promise((_, reject) => {
         ytTimeoutId = setTimeout(() => reject(new Error('YoutubeTranscript timeout')), FETCH_TIMEOUT_MS);

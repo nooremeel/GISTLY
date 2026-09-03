@@ -3,11 +3,7 @@ import { Button } from './Button';
 
 export interface EmptyStateProps {
   variant: 'library' | 'search' | 'tag' | 'collection';
-  /**
-   * Callback for the "Add your first bookmark" button shown on the
-   * `library` variant. Replaces the old DOM scroll-to-form approach —
-   * the inline form no longer exists; the caller now opens the modal.
-   */
+  /** Action handler for initial bookmark creation call-to-action. */
   onAdd?: () => void;
 }
 

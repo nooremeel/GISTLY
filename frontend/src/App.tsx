@@ -23,15 +23,12 @@ function App() {
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            {/* Public routes — accessible without authentication */}
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-
-            {/* Authenticated routes — wrapped in ProtectedRoute + AppShell. */}
             <Route element={<ProtectedRoute />}>
               <Route element={<AppShell />}>
                 <Route path="/library" element={<Home />} />
@@ -42,7 +39,6 @@ function App() {
               </Route>
             </Route>
 
-            {/* Catch-all — renders a 404 page for any unmatched route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

@@ -37,14 +37,12 @@ export function AutocompleteInput({
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLUListElement>(null);
 
-  // Sync input value with external value if not multiple
   useEffect(() => {
     if (!multiple) {
       setInputValue((value as string) || '');
     }
   }, [value, multiple]);
 
-  // Handle clicking outside to close dropdown
   useEffect(() => {
     const handlePointerDown = (e: PointerEvent) => {
       const isOutsideContainer = containerRef.current && !containerRef.current.contains(e.target as Node);
@@ -63,7 +61,7 @@ export function AutocompleteInput({
       const rect = containerRef.current.getBoundingClientRect();
       setDropdownStyle({
         position: 'fixed',
-        top: rect.bottom + 4, // 4px gap
+        top: rect.bottom + 4,
         left: rect.left,
         width: rect.width,
       });
@@ -200,7 +198,6 @@ export function AutocompleteInput({
             onKeyDown={handleKeyDown}
             onFocus={() => setIsOpen(true)}
             onBlur={(e) => {
-              // Only close if focus didn't move inside the dropdown list
               if (dropdownRef.current?.contains(e.relatedTarget as Node)) return;
               setIsOpen(false);
 
@@ -234,7 +231,7 @@ export function AutocompleteInput({
                 key={opt}
                 className="px-3 py-2 cursor-pointer hover:bg-accent-subtle hover:text-accent transition-colors"
                 onMouseDown={(e) => {
-                  // Prevent input blur before click finishes
+                  // Prevent input blur before selection click completes
                   e.preventDefault();
                 }}
                 onClick={(e) => {

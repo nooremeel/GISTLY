@@ -4,20 +4,14 @@ const Bookmark = require('../models/Bookmark');
 const { generateSummaryAndTags } = require('../services/aiService');
 
 /**
- * Capitalise the first character of a string and lowercase the rest.
- * Used to normalise tags so "machine learning" → "Machine learning",
- * preventing case-variant duplicates like "AI" / "Ai" / "ai".
- *
- * (Previously named `toTitleCase`, which was misleading — title-case
- *  capitalises every word; this only capitalises the first character.)
+ * Normalizes tags to sentence case (e.g. "machine learning" -> "Machine learning")
+ * to prevent duplicate variations across case boundaries.
  */
 const capitalizeFirst = (str) => {
   if (!str) return '';
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 };
 
-// @desc    Create a bookmark
-// @route   POST /api/bookmarks
 const createBookmark = async (req, res) => {
   try {
     const { title, url, note, tags: userTags = [], collection, imageUrl } = req.body;
@@ -52,8 +46,6 @@ const createBookmark = async (req, res) => {
   }
 };
 
-// @desc    Get paginated bookmarks for the logged-in user
-// @route   GET /api/bookmarks?page=&limit=&search=
 const getBookmarks = async (req, res) => {
   try {
     const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
@@ -72,8 +64,7 @@ const getBookmarks = async (req, res) => {
     }
 
     if (req.query.search) {
-      // Escape special regex characters from user input before building the
-      // RegExp — an unescaped pattern like "((()" would throw and crash the route.
+      // Escape special regex characters to prevent syntax exceptions and ReDoS.
       const escaped = req.query.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const searchRegex = new RegExp(escaped, 'i');
       filter.$or = [
@@ -104,8 +95,6 @@ const getBookmarks = async (req, res) => {
   }
 };
 
-// @desc    Get a single bookmark (owner only)
-// @route   GET /api/bookmarks/:id
 const getBookmark = async (req, res) => {
   try {
     const bookmark = await Bookmark.findOne({
@@ -126,8 +115,6 @@ const getBookmark = async (req, res) => {
   }
 };
 
-// @desc    Update a bookmark (owner only)
-// @route   PUT /api/bookmarks/:id
 const updateBookmark = async (req, res) => {
   try {
     const { title, url, note, tags, collection, imageUrl } = req.body;
@@ -168,8 +155,6 @@ const updateBookmark = async (req, res) => {
   }
 };
 
-// @desc    Delete a bookmark (owner only)
-// @route   DELETE /api/bookmarks/:id
 const deleteBookmark = async (req, res) => {
   try {
     const bookmark = await Bookmark.findOneAndDelete({
@@ -190,10 +175,7 @@ const deleteBookmark = async (req, res) => {
   }
 };
 
-// GET /api/bookmarks/grouped — bookmarks grouped by collection/folder
-// NOTE: this endpoint sends partial data (no full documents pushed).
-// The Sidebar now uses /collections which is lighter — this endpoint
-// remains available for other consumers.
+// Returns bookmark counts aggregated by collection (retained for backward compatibility).
 const getGrouped = async (req, res) => {
   try {
     const userId = new mongoose.Types.ObjectId(req.user.id);
@@ -216,7 +198,6 @@ const getGrouped = async (req, res) => {
   }
 };
 
-// GET /api/bookmarks/tags/:tag — bookmarks matching a single tag (scoped to user)
 const getByTag = async (req, res) => {
   try {
     const { tag } = req.params;
@@ -234,7 +215,6 @@ const getByTag = async (req, res) => {
   }
 };
 
-// GET /api/bookmarks/tags — all tags grouped and counted
 const getTags = async (req, res) => {
   try {
     const userId = new mongoose.Types.ObjectId(req.user.id);
@@ -256,7 +236,6 @@ const getTags = async (req, res) => {
   }
 };
 
-// GET /api/bookmarks/collections — all collections grouped and counted
 const getCollections = async (req, res) => {
   try {
     const userId = new mongoose.Types.ObjectId(req.user.id);

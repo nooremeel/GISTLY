@@ -4,16 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import { Sparkles, Tag, FolderOpen, ArrowRight, Bookmark } from 'lucide-react';
 
 /**
- * Public landing page — shown to unauthenticated visitors at `/`.
- * Authenticated users are silently redirected to `/library`.
- *
- * Design system alignment (gistly-design-system.md):
- *   §1  — Warm paper background, ink text, calm chrome. No glow, no blur.
- *   §3  — Fraunces display serif for the hero headline ONLY (§3: "the one or
- *          two genuinely editorial moments the app has"). Manrope everywhere else.
- *   §2  — Violet used once (the "Get started" primary button). Not on text.
- *   §21 — animate-fade-in on the hero text only. No decorative motion.
- *   §6  — No shadow on the demo card (border-only elevation at rest, per §9).
+ * Public landing page for unauthenticated visitors.
+ * Authenticated sessions redirect to `/library`.
  */
 export default function LandingPage() {
   const { user, loading } = useAuth();
@@ -26,14 +18,11 @@ export default function LandingPage() {
     }
   }, [user, loading, navigate]);
 
-  // Render nothing while the auth check is in flight — avoids a flash of
-  // the landing page for users who are already logged in.
+  // Prevent layout flash while rehydrating session state
   if (loading) return null;
 
   return (
     <div className="min-h-[100svh] flex flex-col bg-paper">
-
-      {/* ── Top Nav ──────────────────────────────────────────────────────── */}
       <header className="flex h-16 shrink-0 items-center justify-between px-6 md:px-12 border-b border-line bg-paper">
         <span className="font-sans text-h3 font-semibold tracking-tight text-ink select-none">
           Gistly
@@ -65,12 +54,10 @@ export default function LandingPage() {
         </nav>
       </header>
 
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <section
         className="flex flex-col items-center text-center px-6 pt-24 pb-20 md:pt-32 md:pb-28 animate-fade-in"
         aria-labelledby="hero-heading"
       >
-        {/* Eyebrow label — Micro, tracked, Violet — §3 + §11 */}
         <div className="flex items-center gap-1.5 mb-8 px-3 py-1 rounded-full border border-line bg-surface text-micro font-semibold uppercase tracking-widest text-accent">
           <Sparkles className="size-3" aria-hidden="true" />
           AI-powered reading memory
@@ -117,24 +104,15 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Demo Card ────────────────────────────────────────────────────── */}
-      {/*
-        A static, hardcoded replica of a real BookmarkCard so visitors see
-        exactly what the product looks like — no screenshots, no mocks,
-        just actual design-system tokens rendering the real thing.
-        §9 + §10: border-only elevation at rest, surface background, radius-lg.
-      */}
       <section
         className="px-6 pb-20 md:pb-28 flex flex-col items-center"
         aria-label="Product preview"
       >
         <div className="w-full max-w-2xl">
-          {/* Section label above the card */}
           <p className="text-small text-muted text-center mb-6 font-medium">
             This is what a saved article looks like in Gistly
           </p>
 
-          {/* Card — replicates BookmarkCard's visual structure with static data */}
           <article
             className={[
               'bg-surface border border-line rounded-lg p-6 flex flex-col gap-4',
@@ -142,7 +120,6 @@ export default function LandingPage() {
             ].join(' ')}
             aria-label="Demo bookmark card"
           >
-            {/* Domain row */}
             <div className="flex items-center justify-between">
               <span className="font-mono text-small text-muted tracking-tight">
                 jalammar.github.io
@@ -150,12 +127,10 @@ export default function LandingPage() {
               <Bookmark className="size-4 text-faint" aria-hidden="true" />
             </div>
 
-            {/* Title — §10: H3, Ink, heaviest element on the card */}
             <h3 className="text-h3 font-semibold text-ink leading-snug">
               The Illustrated Transformer
             </h3>
 
-            {/* Gist block — §11: lime-wash background, Micro label, Body text */}
             <div
               className="rounded-md p-4 flex flex-col gap-2"
               style={{ background: 'var(--lime-wash)', border: '1px solid rgba(223,255,87,0.3)' }}
@@ -173,7 +148,6 @@ export default function LandingPage() {
               </p>
             </div>
 
-            {/* Tags + meta row — §12 + §10 */}
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <div className="flex items-center gap-2 flex-wrap">
                 {['#ml', '#transformers', '#explainer'].map((tag) => (
@@ -195,7 +169,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Feature Row ──────────────────────────────────────────────────── */}
       <section
         className="px-6 pb-24 md:pb-32"
         aria-labelledby="features-heading"
@@ -236,7 +209,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Footer CTA ───────────────────────────────────────────────────── */}
       <section className="mt-auto border-t border-line bg-surface px-6 py-16 flex flex-col items-center text-center gap-6">
         <h2 className="text-h2 font-semibold text-ink max-w-md">
           Build the library your future self will thank you for.
@@ -255,7 +227,6 @@ export default function LandingPage() {
         <p className="text-small text-faint">No credit card. No ads. Just your library.</p>
       </section>
 
-      {/* ── Minimal footer ───────────────────────────────────────────────── */}
       <footer className="border-t border-line px-6 py-5 flex items-center justify-between text-micro text-faint">
         <span className="font-semibold text-muted">Gistly</span>
         <span>Built with care.</span>

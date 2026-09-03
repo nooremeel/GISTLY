@@ -10,10 +10,7 @@ export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElemen
 }
 
 /**
- * Multi-line text field primitive (design system §8) — used for the note
- * field. Resizable vertically only, minimum 3 rows, otherwise identical
- * treatment to `Input.tsx` (same border/focus/error styling, see
- * `formField.ts`).
+ * Multi-line textarea primitive with label pairing and error messaging.
  */
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(
   { label, error, rows = 3, id, className, wrapperClassName, ...rest },
