@@ -62,14 +62,18 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   ref
 ) {
   if (import.meta.env.DEV) {
-    const isTextlike = typeof children === 'string' || typeof children === 'number';
-    if (!isTextlike && !rest['aria-label'] && !rest['aria-labelledby']) {
+    const hasText =
+      typeof children === 'string' ||
+      typeof children === 'number' ||
+      (Array.isArray(children) && children.some((c) => typeof c === 'string' || typeof c === 'number'));
+    if (!hasText && !rest['aria-label'] && !rest['aria-labelledby']) {
       // eslint-disable-next-line no-console
       console.warn(
         'Button: icon-only buttons need an aria-label (design system §22 — every icon-only button must have an accessible name).'
       );
     }
   }
+
 
   return (
     <button
