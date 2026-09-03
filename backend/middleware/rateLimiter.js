@@ -17,4 +17,12 @@ const aiLimiter = rateLimit({
   message: { success: false, message: 'Too many bookmark creations, please slow down' },
 });
 
-module.exports = { authLimiter, aiLimiter };
+const passwordResetLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 min
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many password reset requests, please try again later' },
+});
+
+module.exports = { authLimiter, aiLimiter, passwordResetLimiter };

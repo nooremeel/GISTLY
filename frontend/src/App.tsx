@@ -5,6 +5,8 @@ import AppShell from './components/AppShell';
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Home from './pages/Home';
 import CollectionView from './pages/CollectionView';
 import MobileCollections from './pages/MobileCollections';
@@ -25,6 +27,9 @@ function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
+
 
             {/* Authenticated routes — wrapped in ProtectedRoute + AppShell. */}
             <Route element={<ProtectedRoute />}>

@@ -63,11 +63,22 @@ export default function Login() {
           <Input
             id="password"
             type="password"
-            label="Password"
+            label={
+              <div className="flex items-center justify-between w-full">
+                <span>Password</span>
+                <Link
+                  to="/forgot-password"
+                  className="font-normal text-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-sm"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+            }
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
           />
+
           <div className="pt-2">
             <Button
               type="submit"

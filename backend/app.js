@@ -5,8 +5,14 @@ const morgan = require('morgan');
 const path = require('path');
 
 const applySecurityMiddleware = require('./middleware/security');
-const { authLimiter, aiLimiter } = require('./middleware/rateLimiter');
-const { validateRegister, validateLogin, validateBookmarkUrl } = require('./middleware/validateInput');
+const { authLimiter, aiLimiter, passwordResetLimiter } = require('./middleware/rateLimiter');
+const {
+  validateRegister,
+  validateLogin,
+  validateBookmarkUrl,
+  validateForgotPassword,
+  validateResetPassword,
+} = require('./middleware/validateInput');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
@@ -26,7 +32,10 @@ app.get('/api/health', (req, res) => {
 // Exact-path validation/rate-limiting, registered before router mounts
 app.post('/api/auth/login', authLimiter, validateLogin);
 app.post('/api/auth/register', validateRegister);
+app.post('/api/auth/forgot-password', passwordResetLimiter, validateForgotPassword);
+app.post('/api/auth/reset-password/:token', validateResetPassword);
 app.post('/api/bookmarks', aiLimiter, validateBookmarkUrl);
+
 
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/bookmarks', require('./routes/bookmarks'));

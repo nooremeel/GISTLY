@@ -50,4 +50,27 @@ function validateBookmarkUrl(req, res, next) {
   next();
 }
 
-module.exports = { validateRegister, validateLogin, validateBookmarkUrl };
+function validateForgotPassword(req, res, next) {
+
+  const { email } = req.body;
+  if (!email || !EMAIL_REGEX.test(email)) {
+    return res.status(400).json({ success: false, message: 'A valid email is required' });
+  }
+  next();
+}
+
+function validateResetPassword(req, res, next) {
+  const { password } = req.body;
+  if (!password || password.length < 6) {
+    return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
+  }
+  next();
+}
+
+module.exports = {
+  validateRegister,
+  validateLogin,
+  validateBookmarkUrl,
+  validateForgotPassword,
+  validateResetPassword,
+};
