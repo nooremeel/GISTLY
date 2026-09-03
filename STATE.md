@@ -11,7 +11,8 @@ After finishing a task, before touching the next branch:
 7. Starting a new chat/context window for the next task? Paste this whole file + the relevant task block from PROJECT_PLAN.md as your first message.
 
 ## Current Active Branch
-`feature/21-frontend-tests`
+`main`
+
 
 ## Completed Tasks
 - **Task 01 — Project Scaffolding:** Created `/backend` and `/frontend` folders, ran `npm init -y` in both, added root `.gitignore` (excludes `node_modules`, `.env`, build output, logs), root `.env.example` documenting `MONGODB_URI`, `GEMINI_API_KEY`, `JWT_SECRET`, `PORT`, `CLIENT_ORIGIN`, and root `README.md`. Initialized git locally, made first commit on `feature/01-setup`, and pushed to a new GitHub remote (`origin`). No deviations from plan — matched all "Done When" criteria.
