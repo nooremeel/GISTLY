@@ -1,4 +1,5 @@
 process.env.MONGOMS_MD5_CHECK = '0';
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-jwt-secret-ci-fallback';
 
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
