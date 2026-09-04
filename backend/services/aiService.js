@@ -24,6 +24,8 @@ async function generateSummaryAndTags({ url, note, userTags = [] }) {
   if (!content) {
     if (note) {
       content = note;
+    } else if (fetchedTitle) {
+      content = `Title: ${fetchedTitle}\nURL: ${url}`;
     } else if (url) {
       content = url;
       isJustUrl = true;

@@ -2,7 +2,13 @@ const cheerio = require('cheerio');
 const { YoutubeTranscript } = require('youtube-transcript');
 
 const FETCH_TIMEOUT_MS = 6000;
+const YT_TIMEOUT_MS = 20000;
 const MAX_CHARS = 25000;
+
+function extractYouTubeVideoId(url) {
+  const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
+  return match ? match[1] : null;
+}
 
 /**
  * Validates whether a URL resolves to a localhost, cloud metadata, or private RFC1918 address
@@ -75,12 +81,13 @@ async function fetchPageData(url) {
         console.error('urlFetcher: oembed fetch failed', e.message);
       }
 
-      const fetchPromise = YoutubeTranscript.fetchTranscript(url);
+      const videoId = extractYouTubeVideoId(url);
+      const fetchPromise = YoutubeTranscript.fetchTranscript(videoId || url);
       // Suppress unhandled rejection if the timeout aborts first in Promise.race.
       fetchPromise.catch(() => {});
 
       const timeoutPromise = new Promise((_, reject) => {
-        ytTimeoutId = setTimeout(() => reject(new Error('YoutubeTranscript timeout')), FETCH_TIMEOUT_MS);
+        ytTimeoutId = setTimeout(() => reject(new Error('YoutubeTranscript timeout')), YT_TIMEOUT_MS);
       });
       
       const transcriptArray = await Promise.race([fetchPromise, timeoutPromise]);
@@ -91,11 +98,17 @@ async function fetchPageData(url) {
           content = fullTranscript.slice(0, MAX_CHARS);
         }
       }
+      if (!content && fetchedTitle) {
+        content = `YouTube Video: ${fetchedTitle}`;
+      }
       return { content, fetchedTitle, fetchedImage };
     }
   } catch (err) {
     clearTimeout(ytTimeoutId);
     console.error('urlFetcher: youtube transcript failed —', err.message);
+    if (!content && fetchedTitle) {
+      content = `YouTube Video: ${fetchedTitle}`;
+    }
     return { content, fetchedTitle, fetchedImage };
   }
 
