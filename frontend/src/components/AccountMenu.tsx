@@ -84,7 +84,7 @@ export default function AccountMenu({ variant = 'header' }: { variant?: 'header'
                     'transition-colors duration-150 outline-none bg-transparent border-none p-0',
                     variant === 'header' 
                       ? 'flex items-center gap-2 rounded-md border border-transparent py-1 pl-1 pr-2 hover:bg-accent-subtle focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface'
-                      : 'flex flex-col items-center justify-center gap-1 flex-1 py-2 w-full text-[10px] font-medium text-muted hover:text-ink'
+                      : 'flex flex-col items-center justify-center gap-1 flex-1 py-2 w-full text-[10px] font-medium text-muted active:text-ink active:scale-95 select-none transition-transform duration-100'
                 )}
             >
                 {user.profilePicture ? (
