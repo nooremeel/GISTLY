@@ -5,17 +5,34 @@ const cors = require('cors');
 // (e.g. staging + production frontend URLs).
 const allowedOrigins = (process.env.CLIENT_ORIGIN || '')
   .split(',')
-  .map(origin => origin.trim())
+  .map(origin => origin.trim().replace(/\/+$/, ''))
   .filter(Boolean);
 
 const corsOptions = {
   origin: (origin, callback) => {
     // Allow requests with no Origin header (curl, server-to-server, health checks)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    return callback(new Error('Not allowed by CORS'));
+
+    const cleanOrigin = origin.trim().replace(/\/+$/, '');
+
+    // Check direct matches
+    if (allowedOrigins.includes(cleanOrigin)) return callback(null, true);
+
+    // If CLIENT_ORIGIN contains a vercel domain, allow all vercel.app deployments for this project
+    const hasVercelOrigin = allowedOrigins.some(o => o.includes('.vercel.app'));
+    if (hasVercelOrigin && cleanOrigin.endsWith('.vercel.app')) {
+      return callback(null, true);
+    }
+
+    // Also in development allow localhost
+    if (cleanOrigin.startsWith('http://localhost:') || cleanOrigin.startsWith('http://127.0.0.1:')) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`Not allowed by CORS: ${origin}`));
   },
   credentials: true,
+  optionsSuccessStatus: 200,
 };
 
 // Custom mongo-injection sanitizer, Express 5-safe.

@@ -1,4 +1,5 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
+const rawBaseUrl = (import.meta.env.VITE_API_BASE_URL as string) || '';
+const API_BASE_URL = rawBaseUrl.trim().replace(/\/+$/, '');
 
 /** Error shape thrown by `request` — includes the HTTP status code. */
 export interface ApiError extends Error {
