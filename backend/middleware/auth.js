@@ -4,7 +4,10 @@ const { COOKIE_NAME } = require('../utils/generateToken');
 
 async function protect(req, res, next) {
   try {
-    const token = req.cookies?.[COOKIE_NAME];
+    let token = req.cookies?.[COOKIE_NAME];
+    if (!token && req.headers.authorization?.startsWith('Bearer ')) {
+      token = req.headers.authorization.split(' ')[1];
+    }
 
     if (!token) {
       return res.status(401).json({ message: 'Not authorized, no token' });

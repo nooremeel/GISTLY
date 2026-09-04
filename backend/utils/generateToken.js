@@ -7,11 +7,13 @@ function generateToken(userId) {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: '7d' });
 }
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 function setTokenCookie(res, token) {
   res.cookie(COOKIE_NAME, token, {
     httpOnly: true,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
+    sameSite: isProduction ? 'none' : 'lax',
+    secure: isProduction,
     maxAge: COOKIE_MAX_AGE_MS,
   });
 }
@@ -19,8 +21,8 @@ function setTokenCookie(res, token) {
 function clearTokenCookie(res) {
   res.clearCookie(COOKIE_NAME, {
     httpOnly: true,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
+    sameSite: isProduction ? 'none' : 'lax',
+    secure: isProduction,
   });
 }
 

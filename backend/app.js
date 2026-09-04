@@ -17,6 +17,9 @@ const { notFound, errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
 
+// Trust reverse proxy (Render, Heroku, etc.) for correct protocol and client IP detection
+app.set('trust proxy', 1);
+
 app.use(express.json());
 app.use(cookieParser());
 applySecurityMiddleware(app);
