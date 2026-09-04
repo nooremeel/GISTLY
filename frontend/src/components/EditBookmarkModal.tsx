@@ -89,7 +89,13 @@ export default function EditBookmarkModal({
   const TITLE_ID = 'edit-modal-title';
 
   const handleClose = useCallback(() => {
-    triggerRef?.current?.focus();
+    if (window.innerWidth >= 768) {
+      triggerRef?.current?.focus();
+    } else {
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+    }
     onClose();
   }, [triggerRef, onClose]);
 
@@ -146,24 +152,6 @@ export default function EditBookmarkModal({
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [requestClose]);
-
-  // Handle mobile device/system Back button navigation so it dismisses the sheet
-  useEffect(() => {
-    window.history.pushState({ gistlyModal: 'edit-bookmark' }, '');
-
-    const handlePopState = () => {
-      requestClose();
-    };
-
-    window.addEventListener('popstate', handlePopState);
-
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-      if (window.history.state?.gistlyModal === 'edit-bookmark') {
-        window.history.back();
-      }
-    };
   }, [requestClose]);
 
   // ─── Gesture Drag Logic (Touches & Pointers) ───────────────────────────
@@ -393,13 +381,16 @@ export default function EditBookmarkModal({
         ref={scrimRef}
         className={cx(
           'fixed inset-0 z-40 bg-ink/40 backdrop-blur-sm transition-opacity duration-250 ease-out',
-          isMounted && !isClosing ? 'opacity-100' : 'opacity-0'
+          isMounted && !isClosing ? 'opacity-100' : 'opacity-0 pointer-events-none'
         )}
         aria-hidden="true"
       />
 
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center p-0 md:p-4 flex-col"
+        className={cx(
+          'fixed inset-0 z-50 flex items-center justify-center p-0 md:p-4 flex-col',
+          isClosing && 'pointer-events-none'
+        )}
         onMouseDown={handleBackdropMouseDown}
         onClick={handleBackdropClick}
       >
