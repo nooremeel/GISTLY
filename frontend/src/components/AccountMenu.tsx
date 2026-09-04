@@ -15,6 +15,23 @@ export default function AccountMenu({ variant = 'header' }: { variant?: 'header'
     const triggerRef = useRef<HTMLButtonElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isUploading, setIsUploading] = useState(false);
+    const touchStartY = useRef<number | null>(null);
+
+    const handleTouchStart = (e: React.TouchEvent) => {
+        touchStartY.current = e.touches[0].clientY;
+    };
+
+    const handleTouchToggle = (e: React.TouchEvent) => {
+        if (touchStartY.current !== null) {
+            const delta = Math.abs(e.changedTouches[0].clientY - touchStartY.current);
+            if (delta > 10) return;
+        }
+        e.preventDefault();
+        if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur();
+        }
+        setOpen((v) => !v);
+    };
 
     useEffect(() => {
         if (!open) return;
@@ -76,6 +93,8 @@ export default function AccountMenu({ variant = 'header' }: { variant?: 'header'
             <button
                 ref={triggerRef}
                 type="button"
+                onTouchStart={variant === 'tab' ? handleTouchStart : undefined}
+                onTouchEnd={variant === 'tab' ? handleTouchToggle : undefined}
                 onClick={() => setOpen((v) => !v)}
                 aria-haspopup="menu"
                 aria-expanded={open}

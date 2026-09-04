@@ -91,10 +91,6 @@ export default function EditBookmarkModal({
   const handleClose = useCallback(() => {
     if (window.innerWidth >= 768) {
       triggerRef?.current?.focus();
-    } else {
-      if (document.activeElement instanceof HTMLElement) {
-        document.activeElement.blur();
-      }
     }
     onClose();
   }, [triggerRef, onClose]);
@@ -103,6 +99,10 @@ export default function EditBookmarkModal({
   const requestClose = useCallback(() => {
     if (isClosing) return;
     setIsClosing(true);
+
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
 
     if (panelRef.current) {
       if (window.innerWidth < 768) {
@@ -206,6 +206,10 @@ export default function EditBookmarkModal({
     const shouldDismiss = currentY.current > 75 || (velocityY.current > 0.4 && currentY.current > 20);
 
     if (shouldDismiss) {
+      setIsClosing(true);
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
       panelRef.current.style.transition = 'transform 250ms cubic-bezier(0.32, 0.72, 0, 1)';
       panelRef.current.style.transform = 'translateY(100%)';
       if (scrimRef.current) {
@@ -407,7 +411,8 @@ export default function EditBookmarkModal({
             'transition-all duration-300 ease-out',
             isMounted && !isClosing
               ? 'translate-y-0 opacity-100 md:scale-100'
-              : 'translate-y-full md:translate-y-0 opacity-0 md:scale-95'
+              : 'translate-y-full md:translate-y-0 opacity-0 md:scale-95',
+            isClosing && 'pointer-events-none'
           )}
           onClick={(e) => e.stopPropagation()}
         >
