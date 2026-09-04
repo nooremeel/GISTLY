@@ -25,7 +25,7 @@ async function register(req, res) {
     const token = generateToken(user._id);
     setTokenCookie(res, token);
 
-    return res.status(201).json({ id: user._id, email: user.email });
+    return res.status(201).json({ id: user._id, email: user.email, profilePicture: user.profilePicture });
   } catch (err) {
     console.error('Register error:', err.message);
     return res.status(500).json({ message: 'Server error during registration' });
@@ -53,7 +53,7 @@ async function login(req, res) {
     const token = generateToken(user._id);
     setTokenCookie(res, token);
 
-    return res.status(200).json({ id: user._id, email: user.email });
+    return res.status(200).json({ id: user._id, email: user.email, profilePicture: user.profilePicture });
   } catch (err) {
     console.error('Login error:', err.message);
     return res.status(500).json({ message: 'Server error during login' });
@@ -171,6 +171,7 @@ async function resetPassword(req, res) {
       message: 'Password reset successfully',
       id: user._id,
       email: user.email,
+      profilePicture: user.profilePicture,
     });
   } catch (err) {
     console.error('Reset password error:', err.message);

@@ -41,11 +41,12 @@ export default function MobileTabBar({ onOpenAdd }: MobileTabBarProps) {
         Tags
       </NavLink>
 
-      <div className="flex-1 flex justify-center relative">
+      <div className="flex-1 flex items-center justify-center relative h-full">
         <button
           type="button"
           onClick={onOpenAdd}
-          className="absolute -top-10 flex h-16 w-16 items-center justify-center rounded-full bg-ink text-paper shadow-2xl active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+          style={{ WebkitTapHighlightColor: 'transparent' }}
+          className="absolute -top-7 flex h-14 w-14 items-center justify-center rounded-full bg-ink text-paper shadow-xl active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
           aria-label="Add Bookmark"
         >
           <Plus className="size-7" />

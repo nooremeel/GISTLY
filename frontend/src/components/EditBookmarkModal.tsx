@@ -71,6 +71,11 @@ export default function EditBookmarkModal({
   const panelRef = useRef<HTMLDivElement>(null);
   const mouseDownTarget = useRef<EventTarget | null>(null);
 
+  // Drag-to-dismiss tracking for mobile sheet
+  const isDragging = useRef(false);
+  const startY = useRef(0);
+  const currentY = useRef(0);
+
   /** Stable heading id for aria-labelledby. */
   const TITLE_ID = 'edit-modal-title';
 
@@ -99,6 +104,72 @@ export default function EditBookmarkModal({
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleClose]);
+
+  // Handle mobile device/system Back button navigation so it dismisses the sheet
+  useEffect(() => {
+    window.history.pushState({ gistlyModal: 'edit-bookmark' }, '');
+
+    const handlePopState = () => {
+      handleClose();
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      if (window.history.state?.gistlyModal === 'edit-bookmark') {
+        window.history.back();
+      }
+    };
+  }, [handleClose]);
+
+  // Pointer drag gestures for mobile bottom sheet dismissal
+  const handleDragStart = (e: React.PointerEvent) => {
+    if (window.innerWidth >= 768) return;
+    if ((e.target as HTMLElement).closest('button')) return;
+
+    isDragging.current = true;
+    startY.current = e.clientY;
+    currentY.current = 0;
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch {}
+
+    if (panelRef.current) {
+      panelRef.current.style.transition = 'none';
+    }
+  };
+
+  const handleDragMove = (e: React.PointerEvent) => {
+    if (!isDragging.current || !panelRef.current) return;
+    const deltaY = e.clientY - startY.current;
+    if (deltaY > 0) {
+      currentY.current = deltaY;
+      panelRef.current.style.transform = `translateY(${deltaY}px)`;
+    } else {
+      currentY.current = 0;
+      panelRef.current.style.transform = 'translateY(0)';
+    }
+  };
+
+  const handleDragEnd = (e: React.PointerEvent) => {
+    if (!isDragging.current || !panelRef.current) return;
+    isDragging.current = false;
+    try {
+      (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+    } catch {}
+
+    if (currentY.current > 80) {
+      panelRef.current.style.transition = 'transform 200ms cubic-bezier(0.32, 0.72, 0, 1)';
+      panelRef.current.style.transform = 'translateY(100%)';
+      setTimeout(() => {
+        handleClose();
+      }, 200);
+    } else {
+      panelRef.current.style.transition = 'transform 200ms cubic-bezier(0.32, 0.72, 0, 1)';
+      panelRef.current.style.transform = 'translateY(0)';
+    }
+  };
 
   useEffect(() => {
     const panel = panelRef.current;
@@ -226,10 +297,25 @@ export default function EditBookmarkModal({
           onClick={(e) => e.stopPropagation()}
         >
           {/* Mobile drag handle */}
-          <div className="md:hidden w-12 h-1.5 bg-line rounded-full mx-auto mt-3 mb-1 shrink-0" />
+          <div
+            className="md:hidden w-full pt-3.5 pb-2 flex items-center justify-center cursor-grab active:cursor-grabbing touch-none select-none shrink-0"
+            onPointerDown={handleDragStart}
+            onPointerMove={handleDragMove}
+            onPointerUp={handleDragEnd}
+            onPointerCancel={handleDragEnd}
+            aria-label="Drag down to close"
+          >
+            <div className="w-12 h-1.5 bg-line hover:bg-muted/40 rounded-full transition-colors" />
+          </div>
 
           {/* Header with Title & X close button */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-line shrink-0 bg-surface">
+          <div
+            className="flex items-center justify-between px-6 py-3.5 md:py-4 border-b border-line shrink-0 bg-surface select-none md:cursor-default cursor-grab active:cursor-grabbing touch-none"
+            onPointerDown={handleDragStart}
+            onPointerMove={handleDragMove}
+            onPointerUp={handleDragEnd}
+            onPointerCancel={handleDragEnd}
+          >
             <h3 id={TITLE_ID} className="text-h3 font-semibold text-ink">
               Edit Bookmark
             </h3>

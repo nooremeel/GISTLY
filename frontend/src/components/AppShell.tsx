@@ -18,7 +18,6 @@ export type AppShellContext = {
 
 export default function AppShell() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isMobileAddOpen, setIsMobileAddOpen] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
 
   const addButtonRef = useRef<HTMLButtonElement>(null);
@@ -49,8 +48,8 @@ export default function AppShell() {
             <Outlet
               context={
                 {
-                  isMobileAddOpen,
-                  setIsMobileAddOpen,
+                  isMobileAddOpen: isAddOpen,
+                  setIsMobileAddOpen: setIsAddOpen,
                   setIsSearchOpen,
                   setIsAddOpen,
                   bookmarkListRef,
@@ -61,7 +60,7 @@ export default function AppShell() {
         </main>
       </div>
       <SearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
-      <MobileTabBar onOpenAdd={() => setIsMobileAddOpen(true)} />
+      <MobileTabBar onOpenAdd={() => setIsAddOpen(true)} />
 
       {isAddOpen && (
         <AddBookmarkModal
