@@ -43,7 +43,10 @@ app.post('/api/bookmarks', aiLimiter, validateBookmarkUrl);
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/bookmarks', require('./routes/bookmarks'));
 app.use('/api/uploads', require('./routes/uploads'));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+const uploadsStaticPath = process.env.VERCEL
+  ? path.join(require('os').tmpdir(), 'uploads')
+  : path.join(__dirname, 'uploads');
+app.use('/uploads', express.static(uploadsStaticPath));
 
 app.use(notFound);
 app.use(errorHandler);

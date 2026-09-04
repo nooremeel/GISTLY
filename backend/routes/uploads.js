@@ -5,7 +5,12 @@ const path = require('path');
 const fs = require('fs');
 const { protect } = require('../middleware/auth');
 
-const uploadDir = path.join(__dirname, '../uploads');
+const os = require('os');
+
+const uploadDir = process.env.VERCEL
+  ? path.join(os.tmpdir(), 'uploads')
+  : path.join(__dirname, '../uploads');
+
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
