@@ -18,9 +18,8 @@ const corsOptions = {
     // Check direct matches
     if (allowedOrigins.includes(cleanOrigin)) return callback(null, true);
 
-    // If CLIENT_ORIGIN contains a vercel domain, allow all vercel.app deployments for this project
-    const hasVercelOrigin = allowedOrigins.some(o => o.includes('.vercel.app'));
-    if (hasVercelOrigin && cleanOrigin.endsWith('.vercel.app')) {
+    // Automatically allow any Vercel deployment domain (.vercel.app)
+    if (cleanOrigin.endsWith('.vercel.app')) {
       return callback(null, true);
     }
 

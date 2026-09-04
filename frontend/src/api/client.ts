@@ -1,6 +1,12 @@
 const rawBaseUrl = (import.meta.env.VITE_API_BASE_URL as string) || '';
 const API_BASE_URL = rawBaseUrl.trim().replace(/\/+$/, '');
 
+function buildUrl(baseUrl: string, path: string): string {
+  const cleanBase = baseUrl.trim().replace(/\/+$/, '');
+  const cleanPath = path.trim().replace(/^\/+/, '/');
+  return `${cleanBase}${cleanPath}`;
+}
+
 /** Error shape thrown by `request` — includes the HTTP status code. */
 export interface ApiError extends Error {
   status: number;
@@ -24,7 +30,8 @@ async function request<T = unknown>(path: string, options: RequestInit = {}): Pr
     headers['Content-Type'] = 'application/json';
   }
 
-  const res = await fetch(`${API_BASE_URL}${path}`, {
+  const url = buildUrl(API_BASE_URL, path);
+  const res = await fetch(url, {
     credentials: 'include',
     ...options,
     headers,
@@ -79,5 +86,5 @@ export const apiClient = {
 export const getImageUrl = (path: string | undefined | null): string => {
   if (!path) return '';
   if (path.startsWith('http')) return path;
-  return `${API_BASE_URL}${path}`;
+  return buildUrl(API_BASE_URL, path);
 };
