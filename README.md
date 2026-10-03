@@ -2,6 +2,8 @@
 
 **Save a link. Get the gist. Instantly.**
 
+🔗 **Live App**: [https://gistly-frontend.vercel.app](https://gistly-frontend.vercel.app)
+
 Gistly is a full-stack bookmark manager powered by Google Gemini AI. Drop in any URL — an article, a YouTube video, a GitHub repo, a blog post — and Gistly reads it, distills it into a sharp two-sentence summary, and files it under smart tags. No more open tabs you'll never revisit. No more forgetting why you saved something.
 
 ---
@@ -19,7 +21,7 @@ Tags are broad, reusable categories (`design`, `finance`, `programming`) — not
 
 ### 🔒 Security Built In from Day One
 - Passwords hashed with **bcrypt** (≥10 salt rounds)
-- Auth via **httpOnly, SameSite=Lax JWT cookies** — no tokens in localStorage
+- Auth via **httpOnly, Secure JWT cookies (SameSite=None in production for the cross-origin Vercel deployment, Lax in development)** — no tokens in localStorage
 - **Helmet** security headers on every response
 - **MongoDB injection sanitization** via `express-mongo-sanitize`
 - **SSRF protection** in the URL fetcher — private IPs, loopback, and cloud metadata endpoints are blocked before any outbound request is made
@@ -38,12 +40,12 @@ A compound MongoDB text index across `title`, `note`, `url`, and `tags` powers i
 | Layer | Technology |
 |---|---|
 | **Backend** | Node.js, Express 5, MongoDB / Mongoose |
-| **Frontend** | React 18 + TypeScript, Vite, Tailwind CSS v4 |
+| **Frontend** | React 19 + TypeScript, Vite, Tailwind CSS v4 |
 | **AI** | Google Gemini (`gemini-3.5-flash`) via the official SDK |
 | **Auth** | JWT in httpOnly cookies, bcrypt password hashing |
 | **Web Scraping** | Cheerio (HTML), `youtube-transcript` (video) |
 | **Email** | Nodemailer with SMTP (sandboxed via Ethereal in dev) |
-| **Testing** | Jest + Supertest, `mongodb-memory-server` (no real DB needed) |
+| **Testing & CI** | Jest + Supertest (backend), Vitest + React Testing Library (frontend), GitHub Actions (Node 20/22 matrix) |
 
 ---
 
@@ -88,11 +90,53 @@ npm run dev
 App starts at `http://localhost:5173`.
 
 ### Tests
+
+**Backend** (Jest + in-memory MongoDB):
 ```bash
 cd backend
 npm test
 ```
-Tests run against an **in-memory MongoDB instance** — no real database, no network calls. Gemini responses are mocked.
+
+**Frontend** (Vitest + React Testing Library):
+```bash
+cd frontend
+npm test            # Run suite once
+npm run test:watch  # Interactive watch mode
+```
+
+---
+
+## Testing & CI
+
+Gistly has automated test coverage across both the backend API and the frontend client, backed by continuous integration on GitHub Actions.
+
+### 🧪 Backend Test Suite (Jest & Supertest)
+- **Framework**: Jest with Supertest for end-to-end HTTP integration testing.
+- **Isolated In-Memory Database**: Powered by `mongodb-memory-server` — each test suite runs against an ephemeral in-memory database with zero persistent state and no external database dependency.
+- **Service Mocks**: Google Gemini AI responses, external page fetchers (Cheerio), and YouTube transcript extraction are mocked to guarantee fast, deterministic tests.
+- **Coverage**: Validates authentication, password reset flows, cookie handling, route guards, rate limiting, and full CRUD operations on bookmarks and collections.
+
+```bash
+cd backend
+npm test
+```
+
+### ⚡ Frontend Test Suite (Vitest & Testing Library)
+- **Framework**: Vitest running in a `jsdom` environment.
+- **Component & Integration Testing**: React Testing Library with `@testing-library/user-event` to simulate realistic user interactions.
+- **Coverage**: Covers authenticated route redirects (`ProtectedRoute`), bookmark creation form validation with optimistic updates and failure rollback (`AddBookmarkForm`), and bookmark cards with interactive actions (`BookmarkCard`).
+
+```bash
+cd frontend
+npm test            # Run Vitest test suite once
+npm run test:watch  # Run Vitest in interactive watch mode
+```
+
+### 🚀 CI Pipeline (GitHub Actions)
+Continuous integration is configured in [`.github/workflows/ci.yml`](.github/workflows/ci.yml) and runs on all pushes to `main` and `feature/**` branches, as well as pull requests targeting `main`:
+
+- **Backend Test Matrix**: Runs on `ubuntu-latest` against a **Node.js matrix (`20.x` and `22.x`)**. Automatically restores cached npm packages, injects test secrets, and runs `npm test`.
+- **Frontend Test & Build**: Runs on `ubuntu-latest` with **Node.js `22.x`**. Restores cached dependencies, executes the Vitest test suite (`npm test`), and verifies that the production Vite bundle compiles cleanly (`npm run build`).
 
 ---
 
@@ -121,4 +165,5 @@ Tests run against an **in-memory MongoDB instance** — no real database, no net
 | Variable | Description |
 |---|---|
 | `VITE_API_BASE_URL` | Backend base URL (e.g. `http://localhost:5000`) |
+
 
